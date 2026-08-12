@@ -68,3 +68,40 @@ export function getUrgencyLabel(
   if (remaining > 0 && remaining <= 3) return { label: `D-${remaining}`, tone: "urgent" };
   return null;
 }
+
+/** 행사가 지정한 오늘 날짜에 진행 중인지 여부 */
+export function isTodayEvent(event: Pick<CultureEvent, "startDate" | "endDate">, today: string = getTodaySeoul()): boolean {
+  return isEventActiveToday(event.startDate, event.endDate, today);
+}
+
+/** 행사가 이번 주말(토/일)에 진행 중인지 여부 */
+export function isWeekendEvent(event: Pick<CultureEvent, "startDate" | "endDate">, today: string = getTodaySeoul()): boolean {
+  const now = new Date(`${today}T00:00:00+09:00`);
+  const dayOfWeek = now.getDay(); // 0: 일요일, 6: 토요일
+  const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
+  const saturdayStr = addDays(today, daysUntilSaturday);
+  const sundayStr = addDays(saturdayStr, 1);
+
+  // 행사 기간이 이번주 토요일 또는 일요일과 겹치는지 체크
+  const activeSat = saturdayStr >= event.startDate && saturdayStr <= event.endDate;
+  const activeSun = sundayStr >= event.startDate && sundayStr <= event.endDate;
+  return activeSat || activeSun;
+}
+
+/** 행사가 이번 주(오늘~일요일) 진행 중인지 여부 */
+export function isThisWeekEvent(event: Pick<CultureEvent, "startDate" | "endDate">, today: string = getTodaySeoul()): boolean {
+  const now = new Date(`${today}T00:00:00+09:00`);
+  const dayOfWeek = now.getDay();
+  const daysUntilSunday = (7 - dayOfWeek) % 7;
+  const sundayStr = addDays(today, daysUntilSunday);
+
+  // 오늘부터 일요일 사이에 행사 기간이 존재하는지
+  return event.startDate <= sundayStr && event.endDate >= today;
+}
+
+/** 행사가 마감 임박(7일 이내 종료)인지 여부 */
+export function isEndingSoon(event: Pick<CultureEvent, "startDate" | "endDate">, today: string = getTodaySeoul(), withinDays = 7): boolean {
+  const remaining = daysUntilEnd(event.endDate, today);
+  return remaining >= 0 && remaining <= withinDays && isTodayEvent(event, today);
+}
+
