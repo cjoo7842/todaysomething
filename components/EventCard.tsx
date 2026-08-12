@@ -46,6 +46,13 @@ export function EventCard({ event }: EventCardProps) {
             {urgency.label}
           </span>
         )}
+
+        {/* 실내/실외 배지 */}
+        <span className="absolute left-2 bottom-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-neutral-700 shadow-sm backdrop-blur-[2px]">
+          {event.location_type === "INDOOR" && "🏢 실내"}
+          {event.location_type === "OUTDOOR" && "🌳 실외"}
+          {event.location_type === "BOTH" && "🏢🌳 실내·외"}
+        </span>
       </div>
 
       <div className="space-y-1 p-3">

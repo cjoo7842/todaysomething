@@ -5,6 +5,7 @@ import { ArrowLeft, MapPin } from "lucide-react";
 import { getMockEvents } from "@/lib/mock-events";
 import { getUrgencyLabel } from "@/lib/date";
 import { cn } from "@/lib/utils";
+import { EventShareActions } from "@/components/EventShareActions";
 
 interface EventDetailPageProps {
   params: { id: string };
@@ -61,6 +62,11 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
             <span className="rounded-full border border-neutral-200 px-2.5 py-0.5 text-xs font-medium text-neutral-600">
               {event.districtGroup}
             </span>
+            <span className="rounded-full border border-neutral-200 px-2.5 py-0.5 text-xs font-medium text-neutral-600">
+              {event.location_type === "INDOOR" && "🏢 실내"}
+              {event.location_type === "OUTDOOR" && "🌳 실외"}
+              {event.location_type === "BOTH" && "🏢🌳 실내·외"}
+            </span>
           </div>
           <h1 className="text-xl font-bold text-neutral-900 lg:text-2xl">{event.title}</h1>
         </div>
@@ -79,6 +85,9 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           <p className="font-semibold text-neutral-800">상세 설명</p>
           <p className="leading-relaxed text-neutral-600">{event.description}</p>
         </section>
+
+        {/* 약속 잡기 & 저장 */}
+        <EventShareActions event={event} />
       </div>
 
       {/* 하단 고정 지도 이동 CTA */}

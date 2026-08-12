@@ -15,4 +15,5 @@ export interface CultureEvent {
   imageUrl: string;
   locationName: string;
   mapUrl: string; // 네이버지도 / 카카오맵 길찾기 외부 링크
+  location_type: 'INDOOR' | 'OUTDOOR' | 'BOTH';
 }
