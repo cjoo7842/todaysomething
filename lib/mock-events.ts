@@ -28,6 +28,7 @@ export function getMockEvents(): CultureEvent[] {
       imageUrl: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
       locationName: "망원한강공원",
       mapUrl: "https://map.naver.com/p/search/망원한강공원",
+      location_type: "OUTDOOR",
     },
     {
       id: "2",
@@ -44,6 +45,7 @@ export function getMockEvents(): CultureEvent[] {
       imageUrl: "https://images.unsplash.com/photo-1555529771-7888783a18d3?w=800&q=80",
       locationName: "광장시장 일대",
       mapUrl: "https://map.naver.com/p/search/광장시장",
+      location_type: "OUTDOOR",
     },
     {
       id: "3",
@@ -60,6 +62,7 @@ export function getMockEvents(): CultureEvent[] {
       imageUrl: "https://images.unsplash.com/photo-1545033131-485ea67fd7c3?w=800&q=80",
       locationName: "국립현대미술관 서울관",
       mapUrl: "https://map.naver.com/p/search/국립현대미술관 서울관",
+      location_type: "INDOOR",
     },
     {
       id: "4",
@@ -76,6 +79,7 @@ export function getMockEvents(): CultureEvent[] {
       imageUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80",
       locationName: "성수동 골목 일대",
       mapUrl: "https://map.naver.com/p/search/성수동 팝업스토어",
+      location_type: "INDOOR",
     },
     {
       id: "5",
@@ -92,6 +96,7 @@ export function getMockEvents(): CultureEvent[] {
       imageUrl: "https://images.unsplash.com/photo-1493676304819-0d7a8d026dcf?w=800&q=80",
       locationName: "홍대 걷고싶은거리",
       mapUrl: "https://map.naver.com/p/search/홍대 걷고싶은거리",
+      location_type: "OUTDOOR",
     },
     {
       id: "6",
@@ -108,6 +113,7 @@ export function getMockEvents(): CultureEvent[] {
       imageUrl: "https://images.unsplash.com/photo-1531058020387-3be344556be6?w=800&q=80",
       locationName: "코엑스 인근 전시관",
       mapUrl: "https://map.naver.com/p/search/코엑스",
+      location_type: "INDOOR",
     },
     {
       id: "7",
@@ -124,6 +130,7 @@ export function getMockEvents(): CultureEvent[] {
       imageUrl: "https://images.unsplash.com/photo-1470019693664-1d202d2c0907?w=800&q=80",
       locationName: "청계천 일대",
       mapUrl: "https://map.naver.com/p/search/청계천",
+      location_type: "OUTDOOR",
     },
   ];
 

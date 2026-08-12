@@ -70,6 +70,25 @@ export function FilterChips({ filters, sort, onFiltersChange, onSortChange }: Fi
         />
       </div>
 
+      {/* 공간 필터 (실내/실외) */}
+      <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="공간 필터">
+        <Chip
+          label="전체 공간"
+          active={filters.locationType === "ALL"}
+          onClick={() => onFiltersChange({ ...filters, locationType: "ALL" })}
+        />
+        <Chip
+          label="🏢 실내"
+          active={filters.locationType === "INDOOR"}
+          onClick={() => onFiltersChange({ ...filters, locationType: "INDOOR" })}
+        />
+        <Chip
+          label="🌳 실외"
+          active={filters.locationType === "OUTDOOR"}
+          onClick={() => onFiltersChange({ ...filters, locationType: "OUTDOOR" })}
+        />
+      </div>
+
       {/* 정렬 */}
       <div className="flex items-center justify-end gap-2 text-sm text-neutral-500">
         <label htmlFor="sort-select" className="sr-only">

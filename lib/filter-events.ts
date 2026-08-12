@@ -6,6 +6,7 @@ export interface EventFilters {
   category: string; // "전체" 또는 특정 카테고리
   freeOnly: boolean;
   keyword: string;
+  locationType: 'ALL' | 'INDOOR' | 'OUTDOOR';
 }
 
 export type SortOption = "urgency" | "district";
@@ -15,6 +16,7 @@ export const DEFAULT_FILTERS: EventFilters = {
   category: "전체",
   freeOnly: false,
   keyword: "",
+  locationType: "ALL",
 };
 
 // 기본 정렬값은 "마감임박순"입니다.
@@ -44,6 +46,13 @@ export function filterAndSortEvents(
     }
     if (filters.freeOnly && !event.isFree) {
       return false;
+    }
+    if (filters.locationType && filters.locationType !== "ALL") {
+      const isIndoorMatch = filters.locationType === "INDOOR" && (event.location_type === "INDOOR" || event.location_type === "BOTH");
+      const isOutdoorMatch = filters.locationType === "OUTDOOR" && (event.location_type === "OUTDOOR" || event.location_type === "BOTH");
+      if (!isIndoorMatch && !isOutdoorMatch) {
+        return false;
+      }
     }
     if (keyword) {
       const inTitle = event.title.toLowerCase().includes(keyword);

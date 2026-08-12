@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,6 +31,10 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-surface font-sans text-neutral-900 antialiased">
         {children}
+        <Script
+          src="https://developers.kakao.com/sdk/js/kakao.min.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

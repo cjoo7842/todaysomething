@@ -16,6 +16,8 @@ import {
   type EventFilters,
   type SortOption,
 } from "@/lib/filter-events";
+import { useWeather } from "@/hooks/useWeather";
+import { WeatherBanner } from "@/components/WeatherBanner";
 
 export default function HomePage() {
   const today = useMemo(() => getTodaySeoul(), []);
@@ -24,6 +26,9 @@ export default function HomePage() {
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
   const [isLoading, setIsLoading] = useState(true);
+
+  // 실시간 날씨 데이터 수신
+  const { weather, loading: weatherLoading } = useWeather();
 
   // 실제 API 연동 시 이 useEffect를 fetch 로직으로 교체하면 됩니다.
   // 지금은 스켈레톤 UI 동작을 보여주기 위해 짧은 지연을 흉내냅니다.
@@ -45,6 +50,16 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-5 px-4 pb-16 pt-6 lg:max-w-5xl">
       <TodayBadge today={today} count={todayActiveCount} />
+
+      {/* 스마트 날씨 배너 */}
+      <WeatherBanner
+        weather={weather}
+        loading={weatherLoading}
+        currentFilter={filters.locationType || "ALL"}
+        onFilterChange={(locationType) =>
+          setFilters((prev) => ({ ...prev, locationType }))
+        }
+      />
 
       <SearchBar
         value={filters.keyword}
