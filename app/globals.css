@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: #fafaf9;
+}
+
+/* line-clamp 유틸이 프로젝트의 tailwindcss 버전에 기본 포함되어 있지 않을 경우를 대비한 폴백 */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
