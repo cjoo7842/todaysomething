@@ -68,3 +68,52 @@ export function getUrgencyLabel(
   if (remaining > 0 && remaining <= 3) return { label: `D-${remaining}`, tone: "urgent" };
   return null;
 }
+
+/** 행사 일정이 "오늘"을 포함하는지 확인 */
+export function isTodayEvent(startDate: string, endDate: string, today: string = getTodaySeoul()): boolean {
+  return today >= startDate && today <= endDate;
+}
+
+/** 행사 일정이 이번 주말(토, 일) 중 어느 하루라도 걸치는지 확인 */
+export function isWeekendEvent(startDate: string, endDate: string, today: string = getTodaySeoul()): boolean {
+  // 오늘 날짜 기준 이번 주 토요일, 일요일 날짜 계산
+  const todayDate = new Date(`${today}T00:00:00+09:00`);
+  const day = todayDate.getDay(); // 0: 일, 1: 월, ..., 6: 토
+  
+  const distanceToSat = 6 - day;
+  const satDate = new Date(todayDate);
+  satDate.setDate(todayDate.getDate() + distanceToSat);
+  
+  const sunDate = new Date(satDate);
+  sunDate.setDate(satDate.getDate() + 1);
+
+  const satStr = getTodaySeoul(satDate);
+  const sunStr = getTodaySeoul(sunDate);
+
+  // 토요일 또는 일요일이 행사 기간(startDate ~ endDate)에 포함되는지 확인
+  const isSatActive = satStr >= startDate && satStr <= endDate;
+  const isSunActive = sunStr >= startDate && sunStr <= endDate;
+  return isSatActive || isSunActive;
+}
+
+/** 행사 일정이 이번 주(오늘부터 일요일까지) 중 걸치는지 확인 */
+export function isThisWeekEvent(startDate: string, endDate: string, today: string = getTodaySeoul()): boolean {
+  const todayDate = new Date(`${today}T00:00:00+09:00`);
+  const day = todayDate.getDay(); // 0: 일, ..., 6: 토
+  const daysToSunday = day === 0 ? 0 : 7 - day;
+  
+  const sundayDate = new Date(todayDate);
+  sundayDate.setDate(todayDate.getDate() + daysToSunday);
+  const sundayStr = getTodaySeoul(sundayDate);
+
+  // 오늘 ~ 이번 주 일요일 사이에 행사가 걸치는지 확인
+  // 즉, 행사 시작일이 이번주 일요일 이하이고, 행사 종료일이 오늘 이상이어야 함
+  return startDate <= sundayStr && endDate >= today;
+}
+
+/** 행사의 종료일이 7일 이내로 다가왔는지 확인 */
+export function isEndingSoon(endDate: string, today: string = getTodaySeoul(), limitDays: number = 7): boolean {
+  const remaining = daysUntilEnd(endDate, today);
+  return remaining >= 0 && remaining <= limitDays;
+}
+
