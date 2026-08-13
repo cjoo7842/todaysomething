@@ -29,6 +29,13 @@ export function getMockEvents(): CultureEvent[] {
       locationName: "망원한강공원",
       mapUrl: "https://map.naver.com/p/search/망원한강공원",
       location_type: "OUTDOOR",
+      website: "https://hangang.seoul.go.kr/",
+      contact: "02-120",
+      target: "누구나 참여 가능",
+      operatingHours: "11:00 - 20:00",
+      latitude: 37.5562,
+      longitude: 126.8953,
+      address: "서울특별시 마포구 마포나루길 467"
     },
     {
       id: "2",
@@ -46,6 +53,13 @@ export function getMockEvents(): CultureEvent[] {
       locationName: "광장시장 일대",
       mapUrl: "https://map.naver.com/p/search/광장시장",
       location_type: "OUTDOOR",
+      website: "http://www.kwangjangmarket.co.kr/",
+      contact: "02-2267-0291",
+      target: "전연령",
+      operatingHours: "17:00 - 23:00",
+      latitude: 37.5701,
+      longitude: 126.9998,
+      address: "서울특별시 종로구 창경궁로 88"
     },
     {
       id: "3",
@@ -63,6 +77,13 @@ export function getMockEvents(): CultureEvent[] {
       locationName: "국립현대미술관 서울관",
       mapUrl: "https://map.naver.com/p/search/국립현대미술관 서울관",
       location_type: "INDOOR",
+      website: "https://www.mmca.go.kr/",
+      contact: "02-3701-9500",
+      target: "초등학생 이상 권장",
+      operatingHours: "10:00 - 18:00 (수요일, 토요일 야간개장 10:00 - 21:00)",
+      latitude: 37.5786,
+      longitude: 126.9801,
+      address: "서울특별시 종로구 삼청로 30"
     },
     {
       id: "4",
@@ -80,6 +101,13 @@ export function getMockEvents(): CultureEvent[] {
       locationName: "성수동 골목 일대",
       mapUrl: "https://map.naver.com/p/search/성수동 팝업스토어",
       location_type: "INDOOR",
+      website: "https://www.instagram.com/",
+      contact: "070-1234-5678",
+      target: "누구나",
+      operatingHours: "12:00 - 21:00",
+      latitude: 37.5445,
+      longitude: 127.0561,
+      address: "서울특별시 성동구 연무장길 33"
     },
     {
       id: "5",
@@ -97,6 +125,13 @@ export function getMockEvents(): CultureEvent[] {
       locationName: "홍대 걷고싶은거리",
       mapUrl: "https://map.naver.com/p/search/홍대 걷고싶은거리",
       location_type: "OUTDOOR",
+      website: "https://www.mapo.go.kr/",
+      contact: "02-3153-8114",
+      target: "전연령",
+      operatingHours: "19:00 - 22:00",
+      latitude: 37.5568,
+      longitude: 126.9242,
+      address: "서울특별시 마포구 어울마당로 120"
     },
     {
       id: "6",
@@ -114,6 +149,13 @@ export function getMockEvents(): CultureEvent[] {
       locationName: "코엑스 인근 전시관",
       mapUrl: "https://map.naver.com/p/search/코엑스",
       location_type: "INDOOR",
+      website: "https://www.coex.co.kr/",
+      contact: "02-6000-0114",
+      target: "전체관람가",
+      operatingHours: "10:00 - 19:00",
+      latitude: 37.5126,
+      longitude: 127.0589,
+      address: "서울특별시 강남구 영동대로 513"
     },
     {
       id: "7",
@@ -131,6 +173,13 @@ export function getMockEvents(): CultureEvent[] {
       locationName: "청계천 일대",
       mapUrl: "https://map.naver.com/p/search/청계천",
       location_type: "OUTDOOR",
+      website: "https://www.sisul.or.kr/",
+      contact: "02-2290-7111",
+      target: "전연령",
+      operatingHours: "18:00 - 23:00",
+      latitude: 37.5694,
+      longitude: 126.9784,
+      address: "서울특별시 중구 태평로1가 1"
     },
   ];
 
@@ -146,3 +195,4 @@ export const DISTRICT_GROUPS = [
 ] as const;
 
 export const CATEGORIES = ["전체", "미술·전시", "지역축제", "팝업스토어", "공연"] as const;
+

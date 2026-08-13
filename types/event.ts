@@ -19,8 +19,8 @@ export interface CultureEvent {
   website?: string;
   contact?: string;
   target?: string;
-  fee?: string;
+  operatingHours?: string;
   latitude?: number;
   longitude?: number;
+  address?: string;
 }
-

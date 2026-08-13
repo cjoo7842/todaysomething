@@ -1,6 +1,7 @@
 "use client";
 
-import { CATEGORIES, DISTRICT_GROUPS } from "@/lib/mock-events";
+import { SEOUL_DISTRICTS } from "@/lib/districts";
+import { DISPLAY_CATEGORIES } from "@/lib/categories";
 import type { EventFilters, SortOption } from "@/lib/filter-events";
 import { cn } from "@/lib/utils";
 
@@ -40,26 +41,14 @@ function Chip({
 export function FilterChips({ filters, sort, onFiltersChange, onSortChange }: FilterChipsProps) {
   return (
     <div className="flex flex-col gap-3">
-      {/* 지역 필터 */}
-      <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="지역 필터">
-        {DISTRICT_GROUPS.map((group) => (
-          <Chip
-            key={group}
-            label={group}
-            active={filters.districtGroup === group}
-            onClick={() => onFiltersChange({ ...filters, districtGroup: group })}
-          />
-        ))}
-      </div>
-
-      {/* 카테고리 필터 + 무료만 보기 */}
+      {/* 카테고리 대분류 필터 (전시 / 문화행사 / 놀거리) */}
       <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="카테고리 필터">
-        {CATEGORIES.map((category) => (
+        {DISPLAY_CATEGORIES.map((cat) => (
           <Chip
-            key={category}
-            label={category}
-            active={filters.category === category}
-            onClick={() => onFiltersChange({ ...filters, category })}
+            key={cat}
+            label={cat}
+            active={filters.category === cat}
+            onClick={() => onFiltersChange({ ...filters, category: cat })}
           />
         ))}
         <span className="mx-1 w-px shrink-0 bg-neutral-200" aria-hidden="true" />
@@ -68,6 +57,18 @@ export function FilterChips({ filters, sort, onFiltersChange, onSortChange }: Fi
           active={filters.freeOnly}
           onClick={() => onFiltersChange({ ...filters, freeOnly: !filters.freeOnly })}
         />
+      </div>
+
+      {/* 지역 필터 (서울 25개 자치구 기준) */}
+      <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="지역 필터">
+        {SEOUL_DISTRICTS.map((d) => (
+          <Chip
+            key={d}
+            label={d}
+            active={filters.district === d}
+            onClick={() => onFiltersChange({ ...filters, district: d })}
+          />
+        ))}
       </div>
 
       {/* 공간 필터 (실내/실외) */}
@@ -102,6 +103,8 @@ export function FilterChips({ filters, sort, onFiltersChange, onSortChange }: Fi
         >
           <option value="urgency">마감임박순</option>
           <option value="district">지역순</option>
+          <option value="latestStart">최근시작순</option>
+          <option value="freeFirst">무료우선</option>
         </select>
       </div>
     </div>
