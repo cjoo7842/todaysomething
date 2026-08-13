@@ -1,34 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+const RECENTLY_VIEWED_KEY = "todaysomething_recently_viewed";
+const MAX_RECENT_ITEMS = 10;
 
 export function useRecentlyViewed() {
-  const [recentlyViewed, setRecentlyViewed] = useState<string[]>([]);
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("recently_viewed_events");
+      const stored = localStorage.getItem(RECENTLY_VIEWED_KEY);
       if (stored) {
-        setRecentlyViewed(JSON.parse(stored));
+        setRecentlyViewedIds(JSON.parse(stored));
       }
     } catch (e) {
-      console.error("Failed to load recently viewed", e);
+      console.error("Failed to load recently viewed events from localStorage", e);
+    } finally {
+      setIsLoaded(true);
     }
   }, []);
 
-  const addRecentlyViewed = (eventId: string) => {
-    setRecentlyViewed((prev) => {
-      // 중복 제거 후 가장 앞으로 이동
-      const filtered = prev.filter((id) => id !== eventId);
-      const next = [eventId, ...filtered].slice(0, 10); // 최대 10개
+  const addRecentlyViewed = useCallback((id: string) => {
+    setRecentlyViewedIds((prev) => {
+      const filtered = prev.filter((item) => item !== id);
+      const next = [id, ...filtered].slice(0, MAX_RECENT_ITEMS);
       try {
-        localStorage.setItem("recently_viewed_events", JSON.stringify(next));
+        localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next));
       } catch (e) {
-        console.error("Failed to save recently viewed", e);
+        console.error("Failed to save recently viewed events", e);
       }
       return next;
     });
-  };
+  }, []);
 
-  return { recentlyViewed, addRecentlyViewed };
+  return { recentlyViewedIds, addRecentlyViewed, isLoaded };
 }
