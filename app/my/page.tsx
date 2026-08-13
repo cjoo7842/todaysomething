@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export default function MyPage() {
   const allEvents = useMemo(() => getMockEvents(), []);
-  const { favorites } = useFavorites();
+  const { favoriteIds } = useFavorites();
   const { recentlyViewed } = useRecentlyViewed();
 
   const [activeTab, setActiveTab] = useState<"favorites" | "recent">("favorites");
@@ -23,8 +23,8 @@ export default function MyPage() {
 
   // 찜한 행사 객체 필터링
   const favoriteEvents = useMemo(() => {
-    return allEvents.filter((e) => favorites.includes(e.id));
-  }, [allEvents, favorites]);
+    return allEvents.filter((e) => favoriteIds.includes(e.id));
+  }, [allEvents, favoriteIds]);
 
   // 최근 본 행사 객체 필터링 (순서 유지)
   const recentEvents = useMemo(() => {
@@ -70,6 +70,7 @@ export default function MyPage() {
             찜한 행사 ({isClient ? favoriteEvents.length : 0})
           </span>
         </button>
+
         <button
           onClick={() => setActiveTab("recent")}
           className={cn(
@@ -89,11 +90,15 @@ export default function MyPage() {
       {/* 탭 콘텐츠 */}
       <div className="mt-4">
         {!isClient ? (
-          <div className="text-center py-10 text-neutral-500 text-sm">로딩 중...</div>
+          <div className="text-center py-10 text-neutral-500 text-sm">
+            로딩 중...
+          </div>
         ) : activeTab === "favorites" ? (
           favoriteEvents.length === 0 ? (
             <div className="text-center py-16 rounded-2xl border border-dashed border-neutral-200 bg-white">
-              <p className="text-sm text-neutral-500 font-medium">찜한 행사가 없습니다.</p>
+              <p className="text-sm text-neutral-500 font-medium">
+                찜한 행사가 없습니다.
+              </p>
               <Link
                 href="/events"
                 className="mt-3 inline-block rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white"
@@ -121,9 +126,12 @@ export default function MyPage() {
                 </button>
               </div>
             )}
+
             {recentEvents.length === 0 ? (
               <div className="text-center py-16 rounded-2xl border border-dashed border-neutral-200 bg-white">
-                <p className="text-sm text-neutral-500 font-medium font-sans">최근에 본 행사가 없습니다.</p>
+                <p className="text-sm text-neutral-500 font-medium font-sans">
+                  최근에 본 행사가 없습니다.
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
