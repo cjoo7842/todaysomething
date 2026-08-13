@@ -234,11 +234,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
       <CalendarModal
         isOpen={isCalendarOpen}
         onClose={() => setIsCalendarOpen(false)}
-        eventTitle={`[오늘뭐보지] ${event.title}`}
-        eventDescription={`장소: ${event.locationName}\n설명: ${event.description}`}
-        locationName={event.locationName}
-        startDate={event.startDate}
-        endDate={event.endDate}
+        event={event}
       />
     </main>
   );
