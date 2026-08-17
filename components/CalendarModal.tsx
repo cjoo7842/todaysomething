@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { CultureEvent } from "@/types/event";
 import { generateGoogleCalendarUrl } from "@/lib/calendar";
 import { X, Calendar as CalendarIcon, Clock } from "lucide-react";
@@ -14,6 +14,11 @@ interface CalendarModalProps {
 export function CalendarModal({ event, isOpen, onClose }: CalendarModalProps) {
   const [visitDate, setVisitDate] = useState(event.startDate);
   const [visitTime, setVisitTime] = useState("14:00");
+  const [pageUrl, setPageUrl] = useState("");
+
+  useEffect(() => {
+    setPageUrl(window.location.href);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -25,6 +30,7 @@ export function CalendarModal({ event, isOpen, onClose }: CalendarModalProps) {
     endDate: event.endDate,
     visitDate,
     visitTime,
+    pageUrl: pageUrl || undefined,
   });
 
   return (
