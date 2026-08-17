@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 export default function MyPage() {
   const allEvents = useMemo(() => getMockEvents(), []);
   const { favoriteIds } = useFavorites();
-  const { recentlyViewed } = useRecentlyViewed();
+  const { recentlyViewedIds } = useRecentlyViewed();
 
   const [activeTab, setActiveTab] = useState<"favorites" | "recent">("favorites");
   const [isClient, setIsClient] = useState(false);
@@ -28,10 +28,10 @@ export default function MyPage() {
 
   // 최근 본 행사 객체 필터링 (순서 유지)
   const recentEvents = useMemo(() => {
-    return recentlyViewed
+    return recentlyViewedIds
       .map((id) => allEvents.find((e) => e.id === id))
       .filter(Boolean) as typeof allEvents;
-  }, [allEvents, recentlyViewed]);
+  }, [allEvents, recentlyViewedIds]);
 
   const handleClearHistory = () => {
     try {
