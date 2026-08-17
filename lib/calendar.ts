@@ -8,6 +8,7 @@ interface CalendarParams {
   endDate: string; // YYYY-MM-DD
   visitDate?: string; // YYYY-MM-DD
   visitTime?: string; // HH:mm
+  pageUrl?: string; // 상세페이지 URL (description 하단 및 sprop에 포함)
 }
 
 /**
@@ -22,6 +23,7 @@ export function generateGoogleCalendarUrl({
   endDate,
   visitDate,
   visitTime,
+  pageUrl,
 }: CalendarParams): string {
   let datesParam: string;
 
@@ -46,13 +48,25 @@ export function generateGoogleCalendarUrl({
     datesParam = `${startFormatted}/${endFormatted}`;
   }
 
+  // 페이지 URL이 있으면 description 하단에 출처 링크 포함
+  const fullDescription = pageUrl
+    ? `${description}\n\n📎 상세 페이지: ${pageUrl}`
+    : description;
+
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: title,
-    details: description,
+    details: fullDescription,
     location: locationName,
     dates: datesParam,
+    // Google Calendar가 한국 시간으로 시간을 정확히 해석하도록 timezone 지정
+    ctz: "Asia/Seoul",
   });
+
+  // sprop=website:<url> 형식으로 출처 URL을 캘린더 일정 메타에 추가
+  if (pageUrl) {
+    params.append("sprop", `website:${pageUrl}`);
+  }
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
