@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { CultureEvent } from "@/types/event";
 import { generateGoogleCalendarUrl } from "@/lib/calendar";
 import { X, Calendar as CalendarIcon, Clock } from "lucide-react";
+import { getTodaySeoul } from "@/lib/date";
 
 interface CalendarModalProps {
   event: CultureEvent;
@@ -12,7 +13,11 @@ interface CalendarModalProps {
 }
 
 export function CalendarModal({ event, isOpen, onClose }: CalendarModalProps) {
-  const [visitDate, setVisitDate] = useState(event.startDate);
+  const [visitDate, setVisitDate] = useState(() => {
+    const today = getTodaySeoul();
+    if (event.isPermanent) return today;
+    return (today >= event.startDate && today <= event.endDate) ? today : event.startDate;
+  });
   const [visitTime, setVisitTime] = useState("14:00");
   const [pageUrl, setPageUrl] = useState("");
 
@@ -55,7 +60,7 @@ export function CalendarModal({ event, isOpen, onClose }: CalendarModalProps) {
             <p className="font-semibold text-neutral-700">{event.title}</p>
             <p className="text-xs text-neutral-500">{event.locationName}</p>
             <p className="text-xs text-neutral-400 mt-0.5">
-              행사 기간: {event.startDate} ~ {event.endDate}
+              행사 기간: {event.isPermanent ? "상시 운영" : `${event.startDate} ~ ${event.endDate}`}
             </p>
           </div>
 
@@ -66,8 +71,8 @@ export function CalendarModal({ event, isOpen, onClose }: CalendarModalProps) {
             <input
               id="visit-date"
               type="date"
-              min={event.startDate}
-              max={event.endDate}
+              min={event.isPermanent ? undefined : event.startDate}
+              max={event.isPermanent ? undefined : event.endDate}
               value={visitDate}
               onChange={(e) => setVisitDate(e.target.value)}
               className="w-full rounded-xl border border-neutral-200 p-2.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand"

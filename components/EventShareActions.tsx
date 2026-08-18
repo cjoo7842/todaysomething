@@ -5,6 +5,7 @@ import type { CultureEvent } from "@/types/event";
 import { generateGoogleCalendarUrl } from "@/lib/calendar";
 import { Calendar, Sparkles, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getTodaySeoul } from "@/lib/date";
 
 interface EventShareActionsProps {
   event: CultureEvent;
@@ -141,8 +142,8 @@ export function EventShareActions({ event }: EventShareActionsProps) {
       typeof window !== "undefined" ? window.location.href : ""
     }`,
     locationName: event.locationName,
-    startDate: event.startDate,
-    endDate: event.endDate,
+    startDate: event.isPermanent ? getTodaySeoul() : event.startDate,
+    endDate: event.isPermanent ? getTodaySeoul() : event.endDate,
   });
 
   return (
