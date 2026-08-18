@@ -1,19 +1,26 @@
 import type { CultureEvent } from "@/types/event";
+import type { District } from "./types";
 import { daysUntilEnd, getTodaySeoul, isTodayEvent, isWeekendEvent, isThisWeekEvent } from "./date";
 import { getDistrictsByAreaName } from "./areas";
 import { getApiCategoriesByDisplay, type DisplayCategory } from "./categories";
+import { getLivingZoneById, getLivingZoneByName, type LivingZone } from "./districts";
+
+export type AudienceFilter = "all" | "kids" | "allAges";
 
 export interface EventFilters {
   districtGroup: string; // "전체" 또는 특정 권역 (하위 호환 유지)
   district: string; // "전체" 또는 서울 25개 자치구 중 하나 (예: "마포구")
+  districts: District[]; // 전체 필터 모달 다중 자치구 선택
+  livingZoneId: string; // "" 이면 미선택, 그 외 LIVING_ZONES id
   category: string; // "전체" 또는 대분류 ("전시" | "문화행사" | "놀거리")
   freeOnly: boolean;
   keyword: string;
-  locationType: 'ALL' | 'INDOOR' | 'OUTDOOR';
-  dateFilter: 'all' | 'today' | 'weekend' | 'thisweek' | 'customDate';
-  customDateValue: string; // 'customDate' 선택 시 사용할 날짜 (YYYY-MM-DD)
+  locationType: "ALL" | "INDOOR" | "OUTDOOR";
+  dateFilter: "all" | "today" | "weekend" | "thisweek" | "custom";
+  customDate: string; // YYYY-MM-DD
   areaName: string; // 하위 호환: 생활권역명 필터 (별도 사용 시)
-  priceFilter: 'all' | 'free' | 'paid';
+  priceFilter: "all" | "free" | "paid";
+  audience: AudienceFilter;
 }
 
 export type SortOption = "urgency" | "district" | "latestStart" | "freeFirst";
@@ -21,17 +28,82 @@ export type SortOption = "urgency" | "district" | "latestStart" | "freeFirst";
 export const DEFAULT_FILTERS: EventFilters = {
   districtGroup: "전체",
   district: "전체",
+  districts: [],
+  livingZoneId: "",
   category: "전체",
   freeOnly: false,
   keyword: "",
   locationType: "ALL",
-  dateFilter: "all",
-  customDateValue: "",
+  dateFilter: "today",
+  customDate: "",
   areaName: "전체",
   priceFilter: "all",
+  audience: "all",
 };
 
 export const DEFAULT_SORT: SortOption = "urgency";
+
+function eventTextBlob(event: CultureEvent): string {
+  return [event.title, event.locationName, event.district, event.address ?? "", event.districtGroup]
+    .join(" ")
+    .toLowerCase();
+}
+
+export function eventMatchesLivingZone(event: CultureEvent, zone: LivingZone): boolean {
+  if (event.livingZoneId && event.livingZoneId === zone.id) return true;
+  if (zone.districts.some((d) => event.district === d || event.district.includes(d))) return true;
+  const blob = eventTextBlob(event);
+  return (zone.keywords ?? []).some((keyword) => blob.includes(keyword.toLowerCase()));
+}
+
+function matchesAudience(event: CultureEvent, audience: AudienceFilter): boolean {
+  if (audience === "all") return true;
+  const target = event.target ?? "";
+  if (audience === "kids") {
+    return /어린이|아동|유아|키즈|3세|초등/.test(target);
+  }
+  return /전연령|누구나|전체관람/.test(target);
+}
+
+/** 생활권 칩 선택 시 행정구 선택을 비워 두 트랙이 겹치지 않게 합니다. */
+export function selectLivingZone(filters: EventFilters, livingZoneId: string): EventFilters {
+  const nextId = filters.livingZoneId === livingZoneId ? "" : livingZoneId;
+  return {
+    ...filters,
+    livingZoneId: nextId,
+    district: "전체",
+    districts: [],
+    districtGroup: "전체",
+    areaName: "전체",
+  };
+}
+
+/** 전체 필터(행정구 등) 적용 시 생활권 선택을 해제합니다. */
+export function applyDetailedFilters(current: EventFilters, detailed: EventFilters): EventFilters {
+  return {
+    ...current,
+    ...detailed,
+    livingZoneId: "",
+    areaName: "전체",
+    districtGroup: "전체",
+    district:
+      detailed.districts.length === 1
+        ? detailed.districts[0]
+        : detailed.districts.length === 0
+          ? detailed.district
+          : "전체",
+  };
+}
+
+function matchesDistrictSelection(event: CultureEvent, filters: EventFilters): boolean {
+  if (filters.districts.length > 0) {
+    return filters.districts.some((d) => event.district === d || event.district.includes(d));
+  }
+  if (filters.district && filters.district !== "전체") {
+    return event.district === filters.district || event.district.includes(filters.district);
+  }
+  return true;
+}
 
 /** 복합 필터 및 정렬을 적용합니다. */
 export function filterAndSortEvents(
@@ -41,6 +113,9 @@ export function filterAndSortEvents(
   today: string = getTodaySeoul()
 ): CultureEvent[] {
   const keyword = filters.keyword.trim().toLowerCase();
+  const livingZone =
+    getLivingZoneById(filters.livingZoneId) ??
+    (filters.areaName !== "전체" ? getLivingZoneByName(filters.areaName) : undefined);
 
   const filtered = events.filter((event) => {
     // isAlwaysOpen(상시 개방) 장소는 날짜 필터를 무시하고 항상 포함
@@ -68,24 +143,23 @@ export function filterAndSortEvents(
       }
     }
 
-    // 2. 자치구 필터 (서울 25개 구 직접 매칭 - 우선)
-    if (filters.district && filters.district !== "전체") {
-      if (event.district !== filters.district) return false;
+    // 생활권 트랙이 켜져 있으면 행정구 다중 선택보다 우선 (상태 동기화 안전망)
+    if (livingZone) {
+      if (!eventMatchesLivingZone(event, livingZone)) return false;
+    } else if (!matchesDistrictSelection(event, filters)) {
+      return false;
     }
 
-    // 2-b. 권역 필터 (districtGroup, 하위 호환 유지)
     if (filters.districtGroup !== "전체" && event.districtGroup !== filters.districtGroup) {
       return false;
     }
 
-    // 2-c. 생활권역 필터 (하위 호환 유지)
-    if (filters.areaName !== "전체") {
+    if (!livingZone && filters.areaName !== "전체") {
       const allowedDistricts = getDistrictsByAreaName(filters.areaName);
       const matched = allowedDistricts.some((dist) => event.district.includes(dist));
       if (!matched) return false;
     }
 
-    // 3. 카테고리 필터 (대분류 → API 원본 카테고리 역매핑)
     if (filters.category !== "전체") {
       const apiCats = getApiCategoriesByDisplay(filters.category as DisplayCategory);
       if (apiCats.length > 0 && !apiCats.includes(event.category)) {
@@ -93,7 +167,6 @@ export function filterAndSortEvents(
       }
     }
 
-    // 5. 무료만 필터 및 가격 필터
     if (filters.freeOnly && !event.isFree) {
       return false;
     }
@@ -104,22 +177,27 @@ export function filterAndSortEvents(
       return false;
     }
 
-    // 6. 공간 필터 (실내/실외)
     if (filters.locationType && filters.locationType !== "ALL") {
-      const isIndoorMatch = filters.locationType === "INDOOR" && (event.location_type === "INDOOR" || event.location_type === "BOTH");
-      const isOutdoorMatch = filters.locationType === "OUTDOOR" && (event.location_type === "OUTDOOR" || event.location_type === "BOTH");
+      const isIndoorMatch =
+        filters.locationType === "INDOOR" &&
+        (event.location_type === "INDOOR" || event.location_type === "BOTH");
+      const isOutdoorMatch =
+        filters.locationType === "OUTDOOR" &&
+        (event.location_type === "OUTDOOR" || event.location_type === "BOTH");
       if (!isIndoorMatch && !isOutdoorMatch) {
         return false;
       }
     }
 
-    // 7. 검색 키워드 필터 (콘텐츠명, 장소명, 지역명, 카테고리 통합 검색)
+    if (!matchesAudience(event, filters.audience)) {
+      return false;
+    }
+
     if (keyword) {
       const inTitle = event.title.toLowerCase().includes(keyword);
       const inLocation = event.locationName.toLowerCase().includes(keyword);
       const inDistrict = event.district.toLowerCase().includes(keyword);
       const inApiCategory = event.category.toLowerCase().includes(keyword);
-      // 주소가 있으면 주소도 검색 범위에 포함
       const inAddress = (event.address ?? "").toLowerCase().includes(keyword);
       if (!inTitle && !inLocation && !inDistrict && !inApiCategory && !inAddress) return false;
     }
@@ -129,17 +207,18 @@ export function filterAndSortEvents(
 
   return [...filtered].sort((a, b) => {
     if (sort === "urgency") {
+      if (a.isPermanent && b.isPermanent) return 0;
+      if (a.isPermanent) return 1;
+      if (b.isPermanent) return -1;
       return daysUntilEnd(a.endDate, today) - daysUntilEnd(b.endDate, today);
     }
     if (sort === "district") {
       return a.districtGroup.localeCompare(b.districtGroup, "ko");
     }
     if (sort === "latestStart") {
-      // 최근 시작순 (시작일 내림차순)
       return b.startDate.localeCompare(a.startDate);
     }
     if (sort === "freeFirst") {
-      // 무료 우선
       if (a.isFree === b.isFree) return 0;
       return a.isFree ? -1 : 1;
     }
@@ -147,3 +226,15 @@ export function filterAndSortEvents(
   });
 }
 
+export function countActiveDetailedFilters(filters: EventFilters): number {
+  let count = 0;
+  if (filters.districts.length > 0 || (filters.district && filters.district !== "전체")) count += 1;
+  if (filters.category !== "전체") count += 1;
+  if (filters.dateFilter === "weekend" || filters.dateFilter === "thisweek" || filters.dateFilter === "custom") {
+    count += 1;
+  }
+  if (filters.freeOnly || filters.priceFilter !== "all") count += 1;
+  if (filters.locationType !== "ALL") count += 1;
+  if (filters.audience !== "all") count += 1;
+  return count;
+}

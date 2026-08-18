@@ -181,6 +181,81 @@ export function getMockEvents(): CultureEvent[] {
       longitude: 126.9784,
       address: "서울특별시 중구 태평로1가 1"
     },
+    {
+      id: "8",
+      title: "여의도 한강공원",
+      category: "공원",
+      district: "영등포구",
+      districtGroup: "여의도",
+      isFree: true,
+      startDate: "2026-01-01",
+      endDate: "2099-12-31",
+      openHours: "24시간 개방",
+      priceInfo: "무료",
+      description: "서울의 대표적인 한강공원으로 넓은 잔디밭과 시원한 강바람을 즐기며 휴식을 취할 수 있는 상시 개방 공간입니다. 배달 구역(배달존)에서 한강 라면과 치킨을 즐겨보세요.",
+      imageUrl: "https://images.unsplash.com/photo-1549693578-d683be217e58?w=800&q=80",
+      locationName: "여의도한강공원",
+      mapUrl: "https://map.naver.com/p/search/여의도한강공원",
+      location_type: "OUTDOOR",
+      website: "https://hangang.seoul.go.kr/",
+      contact: "02-3780-0561",
+      target: "누구나",
+      operatingHours: "연중무휴",
+      latitude: 37.5284,
+      longitude: 126.9343,
+      address: "서울특별시 영등포구 여의동로 330",
+      isPermanent: true
+    },
+    {
+      id: "9",
+      title: "DDP 동대문디자인플라자",
+      category: "복합문화공간",
+      district: "중구",
+      districtGroup: "종로/중구",
+      isFree: true,
+      startDate: "2026-01-01",
+      endDate: "2099-12-31",
+      openHours: "10:00 - 20:00 (외부 공간은 24시간)",
+      priceInfo: "외부 및 기본 입장료 무료 (기획 전시는 유료)",
+      description: "자하 하디드가 설계한 독창적인 외관의 세계 최대 규모 3차원 비정형 건축물입니다. 전시관, 체험관, 디자인숍 등이 함께 모여 있어 언제든지 다채로운 문화 콘텐츠를 즐길 수 있는 복합문화공간입니다.",
+      imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80",
+      locationName: "동대문디자인플라자(DDP)",
+      mapUrl: "https://map.naver.com/p/search/동대문디자인플라자",
+      location_type: "BOTH",
+      website: "https://ddp.or.kr/",
+      contact: "02-2153-0000",
+      target: "누구나",
+      operatingHours: "10:00 - 20:00 (전시별 상이)",
+      latitude: 37.5665,
+      longitude: 127.0092,
+      address: "서울특별시 중구 을지로 281",
+      isPermanent: true
+    },
+    {
+      id: "10",
+      title: "종로 어린이 숲속 체험 놀이터",
+      category: "체험",
+      district: "종로구",
+      districtGroup: "종로/중구",
+      isFree: false,
+      startDate: "2026-01-01",
+      endDate: "2099-12-31",
+      openHours: "10:00 - 17:00 (월요일 휴무)",
+      priceInfo: "아동 3,000원 / 보호자 무료",
+      description: "어린이들이 도심 속 자연과 교감하며 안전하게 뛰어놀 수 있는 자연 체험형 친환경 실내외 놀이터입니다. 다양한 목공예 체험과 감각 놀이 프로그램이 상시 운영됩니다.",
+      imageUrl: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=800&q=80",
+      locationName: "종로어린이체험관",
+      mapUrl: "https://map.naver.com/p/search/종로아이들극장",
+      location_type: "BOTH",
+      website: "https://www.jccac.or.kr/",
+      contact: "02-6263-1184",
+      target: "3세 ~ 9세 아동 및 동반 보호자",
+      operatingHours: "10:00 - 17:00 (매주 월요일 정기휴무)",
+      latitude: 37.5857,
+      longitude: 127.0016,
+      address: "서울특별시 종로구 혜화로 88",
+      isPermanent: true
+    }
   ];
 
   return events;
@@ -192,7 +267,8 @@ export const DISTRICT_GROUPS = [
   "마포/서대문",
   "성수/왕십리",
   "강남/서초",
+  "여의도",
 ] as const;
 
-export const CATEGORIES = ["전체", "미술·전시", "지역축제", "팝업스토어", "공연"] as const;
+export const CATEGORIES = ["전체", "미술·전시", "지역축제", "팝업스토어", "공연", "공원", "체험", "복합문화공간"] as const;
 

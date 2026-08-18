@@ -57,9 +57,10 @@ export interface UrgencyLabel {
  * - 그 외에는 배지 없음(null)
  */
 export function getUrgencyLabel(
-  event: Pick<CultureEvent, "startDate" | "endDate">,
+  event: Pick<CultureEvent, "startDate" | "endDate" | "isPermanent">,
   today: string = getTodaySeoul()
 ): UrgencyLabel | null {
+  if (event.isPermanent) return null;
   if (event.startDate === today) {
     return { label: "NEW", tone: "new" };
   }
@@ -70,12 +71,23 @@ export function getUrgencyLabel(
 }
 
 /** 행사 일정이 "오늘"을 포함하는지 확인 */
-export function isTodayEvent(startDate: string, endDate: string, today: string = getTodaySeoul()): boolean {
-  return today >= startDate && today <= endDate;
+export function isTodayEvent(
+  event: Pick<CultureEvent, "startDate" | "endDate" | "isPermanent">,
+  today: string = getTodaySeoul()
+): boolean {
+  if (event.isPermanent) return true;
+  return today >= event.startDate && today <= event.endDate;
 }
 
 /** 행사 일정이 이번 주말(토, 일) 중 어느 하루라도 걸치는지 확인 */
-export function isWeekendEvent(startDate: string, endDate: string, today: string = getTodaySeoul()): boolean {
+export function isWeekendEvent(
+  event: Pick<CultureEvent, "startDate" | "endDate" | "isPermanent">,
+  today: string = getTodaySeoul()
+): boolean {
+  if (event.isPermanent) return true;
+  
+  const { startDate, endDate } = event;
+
   // 오늘 날짜 기준 이번 주 토요일, 일요일 날짜 계산
   const todayDate = new Date(`${today}T00:00:00+09:00`);
   const day = todayDate.getDay(); // 0: 일, 1: 월, ..., 6: 토
@@ -97,7 +109,14 @@ export function isWeekendEvent(startDate: string, endDate: string, today: string
 }
 
 /** 행사 일정이 이번 주(오늘부터 일요일까지) 중 걸치는지 확인 */
-export function isThisWeekEvent(startDate: string, endDate: string, today: string = getTodaySeoul()): boolean {
+export function isThisWeekEvent(
+  event: Pick<CultureEvent, "startDate" | "endDate" | "isPermanent">,
+  today: string = getTodaySeoul()
+): boolean {
+  if (event.isPermanent) return true;
+
+  const { startDate, endDate } = event;
+
   const todayDate = new Date(`${today}T00:00:00+09:00`);
   const day = todayDate.getDay(); // 0: 일, ..., 6: 토
   const daysToSunday = day === 0 ? 0 : 7 - day;
@@ -112,8 +131,13 @@ export function isThisWeekEvent(startDate: string, endDate: string, today: strin
 }
 
 /** 행사의 종료일이 7일 이내로 다가왔는지 확인 */
-export function isEndingSoon(endDate: string, today: string = getTodaySeoul(), limitDays: number = 7): boolean {
-  const remaining = daysUntilEnd(endDate, today);
+export function isEndingSoon(
+  event: Pick<CultureEvent, "endDate" | "isPermanent">,
+  today: string = getTodaySeoul(),
+  limitDays: number = 7
+): boolean {
+  if (event.isPermanent) return false;
+  const remaining = daysUntilEnd(event.endDate, today);
   return remaining >= 0 && remaining <= limitDays;
 }
 

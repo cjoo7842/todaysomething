@@ -1,4 +1,4 @@
-export type EventCategory = "미술·전시" | "지역축제" | "팝업스토어" | "공연" | "놀거리";
+export type EventCategory = "미술·전시" | "지역축제" | "팝업스토어" | "공연" | "공원" | "체험" | "복합문화공간";
 
 export interface CultureEvent {
   id: string;
@@ -6,6 +6,7 @@ export interface CultureEvent {
   category: EventCategory;
   district: string; // 원본 자치구명 (예: 종로구)
   districtGroup: string; // 화면에 노출되는 권역 그룹명 (예: 종로/중구)
+  livingZoneId?: string; // 선택: 생활권 id (없으면 district + keywords로 매칭)
   isFree: boolean;
   startDate: string; // "YYYY-MM-DD"
   endDate: string; // "YYYY-MM-DD"

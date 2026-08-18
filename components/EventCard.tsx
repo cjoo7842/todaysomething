@@ -58,7 +58,7 @@ export function EventCard({ event }: EventCardProps) {
       <div className="space-y-1 p-3">
         <p className="line-clamp-1 text-base font-semibold text-neutral-900">{event.title}</p>
         <p className="line-clamp-1 text-xs text-neutral-500">
-          {event.locationName} · {formatRange(event.startDate, event.endDate)}
+          {event.locationName} · {event.district} · {event.isPermanent ? "상시 운영" : formatRange(event.startDate, event.endDate)}
         </p>
       </div>
     </Link>

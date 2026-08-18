@@ -5,6 +5,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Heart, SlidersHorizontal } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
+import { FilterChips } from "@/components/FilterChips";
+import { FilterModal } from "@/components/FilterModal";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { EmptyState } from "@/components/EmptyState";
 import { getMockEvents } from "@/lib/mock-events";
@@ -12,13 +14,34 @@ import { getTodaySeoul } from "@/lib/date";
 import {
   DEFAULT_FILTERS,
   DEFAULT_SORT,
+  applyDetailedFilters,
+  countActiveDetailedFilters,
   filterAndSortEvents,
+  selectLivingZone,
   type EventFilters,
   type SortOption,
 } from "@/lib/filter-events";
-import { SEOUL_DISTRICTS } from "@/lib/districts";
+import { SEOUL_DISTRICTS, getLivingZoneById, getLivingZoneByName } from "@/lib/districts";
+import type { District } from "@/lib/types";
 import { DISPLAY_CATEGORIES } from "@/lib/categories";
 import { cn } from "@/lib/utils";
+
+const EVENTS_DEFAULT_FILTERS: EventFilters = {
+  ...DEFAULT_FILTERS,
+  dateFilter: "all",
+};
+
+function parseDistrictsParam(raw: string | null, single: string): District[] {
+  const fromList = (raw ?? "")
+    .split(",")
+    .map((d) => d.trim())
+    .filter((d): d is District => (SEOUL_DISTRICTS as readonly string[]).includes(d));
+  if (fromList.length > 0) return fromList;
+  if (single !== "전체" && (SEOUL_DISTRICTS as readonly string[]).includes(single)) {
+    return [single as District];
+  }
+  return [];
+}
 
 function EventsContent() {
   const router = useRouter();
@@ -27,25 +50,38 @@ function EventsContent() {
   const allEvents = useMemo(() => getMockEvents(), []);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
-  // URL Query Parameters 파싱하여 초기 필터 구성
   const initialFilters = useMemo((): EventFilters => {
     const keyword = searchParams.get("keyword") || "";
     const category = searchParams.get("category") || "전체";
     const district = searchParams.get("district") || "전체";
     const date = searchParams.get("date") || "all";
+    const customDate = searchParams.get("customDate") || "";
     const free = searchParams.get("free") === "true";
     const space = searchParams.get("space") || "ALL";
+    const livingZoneParam = searchParams.get("livingZone") || "";
+    const areaParam = searchParams.get("area") || "전체";
+    const livingZone =
+      getLivingZoneById(livingZoneParam) ??
+      (areaParam !== "전체" ? getLivingZoneByName(areaParam) : undefined);
+
+    const districts = livingZone ? [] : parseDistrictsParam(searchParams.get("districts"), district);
 
     return {
       ...DEFAULT_FILTERS,
       keyword,
       category,
-      district,
-      dateFilter: date as any,
+      district: livingZone ? "전체" : districts.length === 1 ? districts[0] : district,
+      districts,
+      livingZoneId: livingZone?.id ?? "",
+      areaName: livingZone ? "전체" : areaParam,
+      dateFilter: (date as EventFilters["dateFilter"]) || "all",
+      customDate,
       freeOnly: free,
       priceFilter: free ? "free" : "all",
-      locationType: space as any,
+      locationType: (space as EventFilters["locationType"]) || "ALL",
+      audience: (searchParams.get("audience") as EventFilters["audience"]) || "all",
     };
   }, [searchParams]);
 
@@ -69,10 +105,19 @@ function EventsContent() {
     const params = new URLSearchParams();
     if (newFilters.keyword) params.set("keyword", newFilters.keyword);
     if (newFilters.category !== "전체") params.set("category", newFilters.category);
-    if (newFilters.district !== "전체") params.set("district", newFilters.district);
+    if (newFilters.livingZoneId) {
+      params.set("livingZone", newFilters.livingZoneId);
+    } else if (newFilters.districts.length > 0) {
+      params.set("districts", newFilters.districts.join(","));
+    } else if (newFilters.district !== "전체") {
+      params.set("district", newFilters.district);
+    }
     if (newFilters.dateFilter !== "all") params.set("date", newFilters.dateFilter);
+    if (newFilters.dateFilter === "custom" && newFilters.customDate) params.set("customDate", newFilters.customDate);
     if (newFilters.priceFilter !== "all") params.set("free", newFilters.priceFilter === "free" ? "true" : "false");
     if (newFilters.locationType !== "ALL") params.set("space", newFilters.locationType);
+    if (newFilters.audience !== "all") params.set("audience", newFilters.audience);
+    if (newSort !== DEFAULT_SORT) params.set("sort", newSort);
 
     router.replace(`/events?${params.toString()}`);
   };
@@ -82,10 +127,24 @@ function EventsContent() {
     updateUrlParams(newFilters, sort);
   };
 
+  const handleLivingZoneChange = (livingZoneId: string) => {
+    const next = livingZoneId
+      ? selectLivingZone(filters, livingZoneId)
+      : { ...filters, livingZoneId: "", areaName: "전체" };
+    handleFilterChange(next);
+  };
+
+  const handleApplyDetailedFilters = (next: EventFilters) => {
+    handleFilterChange(applyDetailedFilters(filters, next));
+  };
+
   const handleSortChange = (newSort: SortOption) => {
     setSort(newSort);
     updateUrlParams(filters, newSort);
   };
+
+  const detailedFilterCount = countActiveDetailedFilters(filters);
+  const activeLivingZone = getLivingZoneById(filters.livingZoneId);
 
   const visibleEvents = useMemo(
     () => filterAndSortEvents(allEvents, filters, sort, today),
@@ -289,11 +348,20 @@ function EventsContent() {
             </div>
           </div>
 
-          {/* 정렬 & 초기화 */}
-          <div className="flex items-center justify-between pt-2 border-t text-sm">
-            <button
-              onClick={() => handleFilterChange(DEFAULT_FILTERS)}
-              className="text-xs font-semibold text-neutral-400 hover:text-brand transition-colors"
+        {/* 정렬 & 초기화 */}
+        <div className="flex items-center justify-between pt-2 border-t text-sm">
+          <button
+            onClick={() => handleFilterChange(EVENTS_DEFAULT_FILTERS)}
+            className="text-xs font-semibold text-neutral-400 hover:text-brand transition-colors"
+          >
+            필터 전체 초기화
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-neutral-400">정렬 기준</span>
+            <select
+              value={sort}
+              onChange={(e) => handleSortChange(e.target.value as SortOption)}
+              className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand"
             >
               필터 전체 초기화
             </button>
@@ -324,7 +392,7 @@ function EventsContent() {
             ))}
           </div>
         ) : visibleEvents.length === 0 ? (
-          <EmptyState onReset={() => handleFilterChange(DEFAULT_FILTERS)} />
+          <EmptyState onReset={() => handleFilterChange(EVENTS_DEFAULT_FILTERS)} />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {visibleEvents.map((event) => (
@@ -333,6 +401,13 @@ function EventsContent() {
           </div>
         )}
       </div>
+
+      <FilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        filters={filters}
+        onApply={handleApplyDetailedFilters}
+      />
     </main>
   );
 }
