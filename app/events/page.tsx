@@ -87,10 +87,12 @@ function EventsContent() {
 
   const [filters, setFilters] = useState<EventFilters>(initialFilters);
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
+  const [showFullFilters, setShowFullFilters] = useState(false);
 
   // URL 파라미터가 바뀌면 내부 필터 상태도 업데이트
   useEffect(() => {
     setFilters(initialFilters);
+    setShowFullFilters(false);
   }, [initialFilters]);
 
   useEffect(() => {
@@ -172,197 +174,228 @@ function EventsContent() {
         </nav>
       </header>
 
-      {/* 복합 필터 바 */}
-      <section className="space-y-4 rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
-        {/* 키워드 검색창 */}
-        <div>
-          <input
-            type="text"
-            value={filters.keyword}
-            onChange={(e) => handleFilterChange({ ...filters, keyword: e.target.value })}
-            placeholder="키워드로 바로 검색"
-            className="w-full rounded-xl border border-neutral-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          />
-        </div>
-
-        {/* 날짜 선택 */}
-        <div>
-          <label className="block text-xs font-bold text-neutral-500 mb-2">날짜</label>
-          <div className="flex gap-2 flex-wrap">
-            {[
-              { id: "all", label: "전체" },
-              { id: "today", label: "오늘" },
-              { id: "thisweek", label: "이번 주" },
-              { id: "weekend", label: "이번 주말" },
-            ].map((d) => (
-              <button
-                key={d.id}
-                onClick={() => handleFilterChange({ ...filters, dateFilter: d.id as any, customDate: "" })}
-                className={cn(
-                  "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
-                  filters.dateFilter === d.id
-                    ? "border-brand bg-brand text-white"
-                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-                )}
-              >
-                {d.label}
-              </button>
-            ))}
-            {/* 날짜 선택 피커 버튼 */}
-            <button
-              onClick={() => {
-                if (filters.dateFilter !== "custom") {
-                  handleFilterChange({ ...filters, dateFilter: "custom", customDate: filters.customDate || new Date().toISOString().split("T")[0] });
-                }
-              }}
-              className={cn(
-                "flex-1 min-w-[80px] rounded-lg border py-2 px-2 text-center text-xs font-semibold transition-colors flex items-center justify-center gap-1",
-                filters.dateFilter === "custom"
-                  ? "border-brand bg-brand text-white"
-                  : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-              )}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              {filters.dateFilter === "custom" && filters.customDate
-                ? (() => { const [, m, d] = filters.customDate.split("-"); return `${Number(m)}. ${Number(d)}`; })()
-                : "날짜 선택"}
-            </button>
+      {/* 날짜 조건이 적용되었을 때의 간이 헤더 */}
+      {filters.dateFilter !== "all" && !showFullFilters && (
+        <section className="flex items-center justify-between rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm animate-fade-in">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-neutral-400">날짜 조건</span>
+            <span className="inline-flex items-center rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">
+              {filters.dateFilter === "today"
+                ? "오늘"
+                : filters.dateFilter === "thisweek"
+                ? "이번 주"
+                : filters.dateFilter === "weekend"
+                ? "이번 주말"
+                : filters.dateFilter === "custom" && filters.customDate
+                ? (() => { const [, m, d] = filters.customDate.split("-"); return `${Number(m)}.${Number(d)}`; })()
+                : filters.dateFilter}
+            </span>
           </div>
-          {/* 사용자가 "날짜 선택" 선택 시 날짜 입력칼린더 표시 */}
-          {filters.dateFilter === "custom" && (
-            <div className="mt-2">
-              <input
-                id="custom-date-picker"
-                type="date"
-                value={filters.customDate}
-                min={new Date().toISOString().split("T")[0]}
-                onChange={(e) => handleFilterChange({ ...filters, dateFilter: "custom", customDate: e.target.value })}
-                className="w-full rounded-xl border border-brand p-2.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand accent-brand"
-              />
-            </div>
-          )}
-        </div>
-
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label className="block text-xs font-bold text-neutral-500">주요 생활권</label>
+          <div className="flex items-center gap-2">
             <button
-              type="button"
-              onClick={() => setIsFilterModalOpen(true)}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-600 hover:text-brand"
+              onClick={() => setShowFullFilters(true)}
+              className="flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              전체 필터 (25개 구)
-              {detailedFilterCount > 0 && (
-                <span className="rounded-full bg-brand px-1.5 text-[10px] text-white">{detailedFilterCount}</span>
-              )}
+              <span>변경</span>
             </button>
           </div>
-          <FilterChips livingZoneId={filters.livingZoneId} onLivingZoneChange={handleLivingZoneChange} />
-          {activeLivingZone && (
-            <p className="mt-1.5 text-xs text-neutral-500">
-              {activeLivingZone.name} → {activeLivingZone.districts.join(", ")}
-            </p>
-          )}
-          {!activeLivingZone && filters.districts.length > 0 && (
-            <p className="mt-1.5 text-xs text-neutral-500">자치구: {filters.districts.join(", ")}</p>
-          )}
-        </div>
+        </section>
+      )}
 
-        {/* 카테고리(콘텐츠) 선택 - 대분류 3종 */}
-        <div>
-          <label className="block text-xs font-bold text-neutral-500 mb-2">콘텐츠</label>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {DISPLAY_CATEGORIES.map((c) => (
+      {/* 복합 필터 바 */}
+      {(filters.dateFilter === "all" || showFullFilters) && (
+        <section className="space-y-4 rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm animate-fade-in">
+          {/* 키워드 검색창 */}
+          <div>
+            <input
+              type="text"
+              value={filters.keyword}
+              onChange={(e) => handleFilterChange({ ...filters, keyword: e.target.value })}
+              placeholder="키워드로 바로 검색"
+              className="w-full rounded-xl border border-neutral-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            />
+          </div>
+
+          {/* 날짜 선택 */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 mb-2">날짜</label>
+            <div className="flex gap-2 flex-wrap">
+              {[
+                { id: "all", label: "전체" },
+                { id: "today", label: "오늘" },
+                { id: "thisweek", label: "이번 주" },
+                { id: "weekend", label: "이번 주말" },
+              ].map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => handleFilterChange({ ...filters, dateFilter: d.id as any, customDate: "" })}
+                  className={cn(
+                    "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
+                    filters.dateFilter === d.id
+                      ? "border-brand bg-brand text-white"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  )}
+                >
+                  {d.label}
+                </button>
+              ))}
+              {/* 날짜 선택 피커 버튼 */}
               <button
-                key={c}
-                onClick={() => handleFilterChange({ ...filters, category: c })}
+                onClick={() => {
+                  if (filters.dateFilter !== "custom") {
+                    handleFilterChange({ ...filters, dateFilter: "custom", customDate: filters.customDate || new Date().toISOString().split("T")[0] });
+                  }
+                }}
                 className={cn(
-                  "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                  filters.category === c
+                  "flex-1 min-w-[80px] rounded-lg border py-2 px-2 text-center text-xs font-semibold transition-colors flex items-center justify-center gap-1",
+                  filters.dateFilter === "custom"
                     ? "border-brand bg-brand text-white"
                     : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
                 )}
               >
-                {c}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                {filters.dateFilter === "custom" && filters.customDate
+                  ? (() => { const [, m, d] = filters.customDate.split("-"); return `${Number(m)}. ${Number(d)}`; })()
+                  : "날짜 선택"}
               </button>
-            ))}
+            </div>
+            {/* 사용자가 "날짜 선택" 선택 시 날짜 입력칼린더 표시 */}
+            {filters.dateFilter === "custom" && (
+              <div className="mt-2">
+                <input
+                  id="custom-date-picker"
+                  type="date"
+                  value={filters.customDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => handleFilterChange({ ...filters, dateFilter: "custom", customDate: e.target.value })}
+                  className="w-full rounded-xl border border-brand p-2.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand accent-brand"
+                />
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* 가격 종류 선택 */}
-        <div>
-          <label className="block text-xs font-bold text-neutral-500 mb-2">가격</label>
-          <div className="flex gap-2">
-            {[
-              { id: "all", label: "전체" },
-              { id: "free", label: "무료" },
-              { id: "paid", label: "유료" },
-            ].map((p) => (
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="block text-xs font-bold text-neutral-500">주요 생활권</label>
               <button
-                key={p.id}
-                onClick={() => handleFilterChange({ ...filters, priceFilter: p.id as any })}
-                className={cn(
-                  "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
-                  filters.priceFilter === p.id
-                    ? "border-brand bg-brand text-white"
-                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-                )}
+                type="button"
+                onClick={() => setIsFilterModalOpen(true)}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-600 hover:text-brand"
               >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 공간 유형 선택 */}
-        <div>
-          <label className="block text-xs font-bold text-neutral-500 mb-2">공간</label>
-          <div className="flex gap-2">
-            {[
-              { id: "ALL", label: "전체 공간" },
-              { id: "INDOOR", label: "🏢 실내" },
-              { id: "OUTDOOR", label: "🌳 실외" },
-            ].map((s) => (
-              <button
-                key={s.id}
-                onClick={() => handleFilterChange({ ...filters, locationType: s.id as any })}
-                className={cn(
-                  "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
-                  filters.locationType === s.id
-                    ? "border-brand bg-brand text-white"
-                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                전체 필터 (25개 구)
+                {detailedFilterCount > 0 && (
+                  <span className="rounded-full bg-brand px-1.5 text-[10px] text-white">{detailedFilterCount}</span>
                 )}
-              >
-                {s.label}
               </button>
-            ))}
+            </div>
+            <FilterChips livingZoneId={filters.livingZoneId} onLivingZoneChange={handleLivingZoneChange} />
+            {activeLivingZone && (
+              <p className="mt-1.5 text-xs text-neutral-500">
+                {activeLivingZone.name} → {activeLivingZone.districts.join(", ")}
+              </p>
+            )}
+            {!activeLivingZone && filters.districts.length > 0 && (
+              <p className="mt-1.5 text-xs text-neutral-500">자치구: {filters.districts.join(", ")}</p>
+            )}
           </div>
-        </div>
 
-        {/* 정렬 & 초기화 */}
-        <div className="flex items-center justify-between pt-2 border-t text-sm">
-          <button
-            onClick={() => handleFilterChange(EVENTS_DEFAULT_FILTERS)}
-            className="text-xs font-semibold text-neutral-400 hover:text-brand transition-colors"
-          >
-            필터 전체 초기화
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-neutral-400">정렬 기준</span>
-            <select
-              value={sort}
-              onChange={(e) => handleSortChange(e.target.value as SortOption)}
-              className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand"
+          {/* 카테고리(콘텐츠) 선택 - 대분류 3종 */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 mb-2">콘텐츠</label>
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {DISPLAY_CATEGORIES.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => handleFilterChange({ ...filters, category: c })}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                    filters.category === c
+                      ? "border-brand bg-brand text-white"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  )}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 가격 종류 선택 */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 mb-2">가격</label>
+            <div className="flex gap-2">
+              {[
+                { id: "all", label: "전체" },
+                { id: "free", label: "무료" },
+                { id: "paid", label: "유료" },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => handleFilterChange({ ...filters, priceFilter: p.id as any })}
+                  className={cn(
+                    "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
+                    filters.priceFilter === p.id
+                      ? "border-brand bg-brand text-white"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 공간 유형 선택 */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 mb-2">공간</label>
+            <div className="flex gap-2">
+              {[
+                { id: "ALL", label: "전체 공간" },
+                { id: "INDOOR", label: "🏢 실내" },
+                { id: "OUTDOOR", label: "🌳 실외" },
+              ].map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => handleFilterChange({ ...filters, locationType: s.id as any })}
+                  className={cn(
+                    "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
+                    filters.locationType === s.id
+                      ? "border-brand bg-brand text-white"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 정렬 & 초기화 */}
+          <div className="flex items-center justify-between pt-2 border-t text-sm">
+            <button
+              onClick={() => handleFilterChange(EVENTS_DEFAULT_FILTERS)}
+              className="text-xs font-semibold text-neutral-400 hover:text-brand transition-colors"
             >
-              <option value="urgency">마감임박순</option>
-              <option value="district">지역순</option>
-              <option value="latestStart">최근시작순</option>
-              <option value="freeFirst">무료우선</option>
-            </select>
+              필터 전체 초기화
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-neutral-400">정렬 기준</span>
+              <select
+                value={sort}
+                onChange={(e) => handleSortChange(e.target.value as SortOption)}
+                className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand"
+              >
+                <option value="urgency">마감임박순</option>
+                <option value="district">지역순</option>
+                <option value="latestStart">최근시작순</option>
+                <option value="freeFirst">무료우선</option>
+              </select>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 리스트 뷰 영역 */}
       <div>

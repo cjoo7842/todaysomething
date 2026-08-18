@@ -118,17 +118,29 @@ export function filterAndSortEvents(
     (filters.areaName !== "전체" ? getLivingZoneByName(filters.areaName) : undefined);
 
   const filtered = events.filter((event) => {
-    if (filters.dateFilter === "today" && !isTodayEvent(event, today)) {
-      return false;
-    }
-    if (filters.dateFilter === "weekend" && !isWeekendEvent(event, today)) {
-      return false;
-    }
-    if (filters.dateFilter === "thisweek" && !isThisWeekEvent(event, today)) {
-      return false;
-    }
-    if (filters.dateFilter === "custom" && !isTodayEvent(event, filters.customDate || today)) {
-      return false;
+    // isPermanent 또는 isAlwaysOpen(상시 개방) 장소는 날짜 필터를 무시하고 항상 포함
+    const skipDateFilter = event.isPermanent === true || event.isAlwaysOpen === true;
+
+    // 1. 날짜 필터
+    if (!skipDateFilter) {
+      if (filters.dateFilter === "today" && !isTodayEvent(event, today)) {
+        return false;
+      }
+      if (filters.dateFilter === "weekend" && !isWeekendEvent(event, today)) {
+        return false;
+      }
+      if (filters.dateFilter === "thisweek" && !isThisWeekEvent(event, today)) {
+        return false;
+      }
+      if (filters.dateFilter === "custom" && filters.customDate) {
+        const d = filters.customDate;
+        if (!(d >= event.startDate && d <= event.endDate)) return false;
+      }
+      // 기본 'all' 일 때는 오늘 진행중인 것만
+      if (filters.dateFilter === "all") {
+        const active = today >= event.startDate && today <= event.endDate;
+        if (!active) return false;
+      }
     }
 
     // 생활권 트랙이 켜져 있으면 행정구 다중 선택보다 우선 (상태 동기화 안전망)
@@ -195,9 +207,11 @@ export function filterAndSortEvents(
 
   return [...filtered].sort((a, b) => {
     if (sort === "urgency") {
-      if (a.isPermanent && b.isPermanent) return 0;
-      if (a.isPermanent) return 1;
-      if (b.isPermanent) return -1;
+      const aPerm = a.isPermanent || a.isAlwaysOpen;
+      const bPerm = b.isPermanent || b.isAlwaysOpen;
+      if (aPerm && bPerm) return 0;
+      if (aPerm) return 1;
+      if (bPerm) return -1;
       return daysUntilEnd(a.endDate, today) - daysUntilEnd(b.endDate, today);
     }
     if (sort === "district") {

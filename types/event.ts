@@ -1,4 +1,4 @@
-export type EventCategory = "미술·전시" | "지역축제" | "팝업스토어" | "공연" | "공원" | "체험" | "복합문화공간";
+export type EventCategory = "미술·전시" | "지역축제" | "팝업스토어" | "공연" | "놀거리" | "공원" | "체험" | "복합문화공간";
 
 export interface CultureEvent {
   id: string;
@@ -23,6 +23,5 @@ export interface CultureEvent {
   operatingHours?: string;
   latitude?: number;
   longitude?: number;
-  address?: string;
-  isPermanent?: boolean;
+  isPermanent?: boolean; // 상시 방문 가능 장소 (공원, 복합문화공간 등) - 날짜 필터 무시
 }
