@@ -35,7 +35,7 @@ export default function MyPage() {
 
   const handleClearHistory = () => {
     try {
-      localStorage.removeItem("recently_viewed_events");
+      localStorage.removeItem("todaysomething_recently_viewed");
       window.location.reload();
     } catch (e) {
       console.error(e);
