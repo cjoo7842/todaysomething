@@ -23,5 +23,7 @@ export interface CultureEvent {
   operatingHours?: string;
   latitude?: number;
   longitude?: number;
+  address?: string;
   isPermanent?: boolean; // 상시 방문 가능 장소 (공원, 복합문화공간 등) - 날짜 필터 무시
+  isAlwaysOpen?: boolean; // 상시 방문 가능 장소 (공원, 복합문화공간 등) - 날짜 필터 무시
 }
