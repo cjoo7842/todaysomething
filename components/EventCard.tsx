@@ -1,22 +1,24 @@
 import Image from "next/image";
 import Link from "next/link";
+import { MapPin, Calendar } from "lucide-react";
 import type { CultureEvent } from "@/types/event";
 import { getUrgencyLabel } from "@/lib/date";
 import { cn } from "@/lib/utils";
 
 interface EventCardProps {
   event: CultureEvent;
+  recommendationReason?: string;
 }
 
-export function EventCard({ event }: EventCardProps) {
+export function EventCard({ event, recommendationReason }: EventCardProps) {
   const urgency = getUrgencyLabel(event);
 
   return (
     <Link
       href={`/event/${event.id}`}
-      className="group block rounded-card border border-neutral-100 bg-white shadow-sm transition-transform active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+      className="group block rounded-2xl border border-neutral-100 bg-white shadow-sm transition-all hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-card bg-neutral-100">
+      <div className="relative aspect-[3/2] w-full overflow-hidden rounded-t-2xl bg-neutral-100">
         <Image
           src={event.imageUrl}
           alt=""
@@ -47,19 +49,36 @@ export function EventCard({ event }: EventCardProps) {
           </span>
         )}
 
-        {/* 실내/실외 배지 */}
-        <span className="absolute left-2 bottom-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-neutral-700 shadow-sm backdrop-blur-[2px]">
-          {event.location_type === "INDOOR" && "🏢 실내"}
-          {event.location_type === "OUTDOOR" && "🌳 실외"}
-          {event.location_type === "BOTH" && "🏢🌳 실내·외"}
-        </span>
       </div>
 
-      <div className="space-y-1 p-3">
-        <p className="line-clamp-1 text-base font-semibold text-neutral-900">{event.title}</p>
-        <p className="line-clamp-1 text-xs text-neutral-500">
-          {event.locationName} · {event.district} · {event.isPermanent ? "상시 운영" : formatRange(event.startDate, event.endDate)}
-        </p>
+      <div className="flex flex-col p-4 gap-1.5">
+        <h3 className="line-clamp-1 text-lg font-bold text-neutral-900 leading-tight group-hover:text-brand transition-colors mb-0.5">
+          {event.title}
+        </h3>
+        
+        <div className="flex items-center gap-2.5 text-xs font-medium text-neutral-500">
+          <div className="flex items-center gap-1 min-w-0">
+            <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{event.locationName}</span>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Calendar className="h-3.5 w-3.5 shrink-0" />
+            <span>{event.isPermanent ? "상시 운영" : formatRange(event.startDate, event.endDate)}</span>
+          </div>
+        </div>
+
+        <div className="mt-1 pt-2 border-t border-neutral-100 flex items-center justify-between">
+          {recommendationReason ? (
+            <p className="text-[11px] font-bold text-brand leading-none">
+              {recommendationReason}
+            </p>
+          ) : (
+            <p className="text-[11px] font-bold text-neutral-400 group-hover:text-brand transition-colors">
+              자세히 보기
+            </p>
+          )}
+          <span className="text-neutral-300 text-xs group-hover:text-brand transition-colors aria-hidden={true}">&rarr;</span>
+        </div>
       </div>
     </Link>
   );

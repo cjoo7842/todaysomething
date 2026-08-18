@@ -1,94 +1,93 @@
 "use client";
 
+import { useMemo } from "react";
+import Link from "next/link";
 import type { WeatherInfo } from "@/hooks/useWeather";
 import { cn } from "@/lib/utils";
-import { Sparkles } from "lucide-react";
 
 interface WeatherBannerProps {
   weather: WeatherInfo;
   loading: boolean;
-  currentFilter: "ALL" | "INDOOR" | "OUTDOOR";
-  onFilterChange: (filter: "ALL" | "INDOOR" | "OUTDOOR") => void;
+  recommendedCount: number;
 }
 
-export function WeatherBanner({
-  weather,
-  loading,
-  currentFilter,
-  onFilterChange,
-}: WeatherBannerProps) {
+export function WeatherBanner({ weather, loading, recommendedCount }: WeatherBannerProps) {
+  const { temp, isRainy, isCloudy, description, icon } = weather;
+
+  // 추천 로직 계산 (early return 전에 호출)
+  const recommendation = useMemo(() => {
+    // 비나 눈이 오거나 아주 추울 때/더울 때 -> 실내 추천
+    if (isRainy) {
+      return {
+        type: "INDOOR",
+        shortDesc: "비가 오네요! 쾌적한",
+        btnPrefix: "실내 행사",
+        bgClass: "from-blue-50 to-indigo-50 border-blue-100",
+      };
+    }
+    
+    if (temp <= 5) {
+      return {
+        type: "INDOOR",
+        shortDesc: "추워요! 따뜻한",
+        btnPrefix: "실내 행사",
+        bgClass: "from-slate-50 to-blue-50 border-slate-100",
+      };
+    }
+    
+    if (temp >= 30) {
+      return {
+        type: "INDOOR",
+        shortDesc: "더워요! 시원한",
+        btnPrefix: "실내 행사",
+        bgClass: "from-sky-50 to-cyan-50 border-sky-100",
+      };
+    }
+
+    if (isCloudy) {
+      return {
+        type: "INDOOR",
+        shortDesc: "흐린 날에도 즐거운",
+        btnPrefix: "실내 행사",
+        bgClass: "from-neutral-50 to-slate-50 border-neutral-200",
+      };
+    }
+
+    // 기본 (맑고 좋은 날씨) -> 야외 추천
+    return {
+      type: "OUTDOOR",
+      shortDesc: "날씨가 너무 좋아요!",
+      btnPrefix: "야외 행사",
+      bgClass: "from-[#FFF5F0] to-[#FFE8E0] border-[#FFECE5]",
+    };
+  }, [isRainy, temp, isCloudy]);
+
   if (loading) {
     return (
-      <div className="w-full h-24 animate-pulse rounded-card bg-neutral-100 border border-neutral-200" />
+      <div className="w-full h-11 animate-pulse rounded-xl bg-neutral-100 border border-neutral-200" />
     );
   }
 
-  const { temp, isRainy, isCloudy, description, icon } = weather;
-
-  // 비/눈이 오거나 흐린 날씨인 경우 실내 행사 추천
-  const showIndoorRecommendation = isRainy || isCloudy;
-
-  const handleQuickFilterClick = () => {
-    if (showIndoorRecommendation) {
-      onFilterChange(currentFilter === "INDOOR" ? "ALL" : "INDOOR");
-    } else {
-      onFilterChange(currentFilter === "OUTDOOR" ? "ALL" : "OUTDOOR");
-    }
-  };
-
-  const isQuickFilterActive = showIndoorRecommendation
-    ? currentFilter === "INDOOR"
-    : currentFilter === "OUTDOOR";
-
-  const bannerText = showIndoorRecommendation
-    ? `${icon} 오늘 비/눈 소식이 있거나 흐린 날씨네요! 쾌적한 실내 행사는 어떠세요?`
-    : `☀️ 오늘 날씨가 화창하고 맑아요! 화창한 야외 활동은 어떠세요?`;
-
-  const buttonText = showIndoorRecommendation ? "🏢 실내 행사만 보기" : "🌳 야외 행사만 보기";
-
   return (
-    <div className="relative overflow-hidden rounded-card border border-brand/20 bg-gradient-to-r from-orange-50/90 to-rose-50/90 p-4 shadow-sm backdrop-blur-sm transition-all hover:shadow-md">
-      {/* 뒷배경 소프트 그라디언트 글로우 효과 */}
-      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-brand/15 blur-xl" />
-      <div className="absolute -left-8 -bottom-8 h-24 w-24 rounded-full bg-rose-accent/15 blur-xl" />
-
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 relative z-10">
-        <div className="space-y-1.5">
-          {/* 서울 날씨 요약 뱃지 */}
-          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-neutral-600">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-2.5 py-0.5 shadow-sm border border-neutral-100">
-              <span className="text-sm leading-none">{icon}</span>
-              <span>서울 {temp}°C</span>
-              <span className="text-neutral-300">|</span>
-              <span className="text-brand font-bold">{description}</span>
-            </span>
-            <span className="flex items-center gap-1 text-rose-500 bg-rose-100/50 px-2 py-0.5 rounded-full">
-              <Sparkles className="h-3 w-3 animate-pulse" />
-              오늘의 스마트 추천
-            </span>
-          </div>
-
-          {/* 추천 문구 */}
-          <p className="text-sm font-medium text-neutral-800 leading-relaxed">
-            {bannerText}
-          </p>
-        </div>
-
-        {/* 퀵 필터 버튼 */}
-        <button
-          type="button"
-          onClick={handleQuickFilterClick}
-          className={cn(
-            "inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xl border transition-all duration-200 active:scale-[0.98] shadow-sm select-none shrink-0",
-            isQuickFilterActive
-              ? "bg-brand text-white border-brand shadow-inner hover:bg-brand-dark"
-              : "bg-white hover:bg-neutral-50 text-neutral-700 border-neutral-200 hover:border-neutral-300"
-          )}
-        >
-          <span>{showIndoorRecommendation ? "🏢" : "🌳"}</span>
-          <span>{buttonText}</span>
-        </button>
+    <Link
+      href={`/events?space=${recommendation.type}`}
+      className={cn(
+        "group flex w-full items-center justify-between gap-2 overflow-hidden rounded-xl border px-4 py-3 shadow-sm transition-all hover:shadow-md active:scale-[0.98] bg-gradient-to-r",
+        recommendation.bgClass
+      )}
+    >
+      <div className="flex items-center gap-2 overflow-hidden">
+        <span className="text-[13px] font-extrabold text-neutral-800 shrink-0">
+          [{icon} 서울 {temp}°C]
+        </span>
+        <span className="text-[13px] font-bold text-neutral-800 group-hover:text-brand transition-colors truncate">
+          <span className="text-neutral-600 font-medium mr-1">{recommendation.shortDesc}</span>
+          {recommendation.btnPrefix} {recommendedCount}개 보러가기
+        </span>
       </div>
-    </div>
+      <span aria-hidden="true" className="text-brand opacity-60 group-hover:opacity-100 transition-opacity shrink-0">
+        &rarr;
+      </span>
+    </Link>
   );
 }

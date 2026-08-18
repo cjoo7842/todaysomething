@@ -26,7 +26,7 @@ import {
 } from "@/lib/filter-events";
 import { useWeather } from "@/hooks/useWeather";
 import { WeatherBanner } from "@/components/WeatherBanner";
-import { Heart, Compass, Calendar, SlidersHorizontal, Filter, ChevronDown } from "lucide-react";
+import { Heart, Compass, Calendar, SlidersHorizontal, Filter, ChevronDown, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function HomePage() {
@@ -58,10 +58,32 @@ export default function HomePage() {
     [allEvents, sort, today]
   );
 
-  // 1. TODAY'S PICK (추천 행사 - 임시로 3개)
+  // 날씨 기반 추천 공간 및 개수 계산
+  const { recommendedSpace, recommendedCount, isIndoorRecommended } = useMemo(() => {
+    if (!weather) return { recommendedSpace: "ALL", recommendedCount: 0, isIndoorRecommended: false };
+    const isIndoor = weather.isRainy || weather.temp <= 5 || weather.temp >= 30 || weather.isCloudy;
+    const space = isIndoor ? "INDOOR" : "OUTDOOR";
+    const count = allEvents.filter(e => e.location_type === space || e.location_type === "BOTH").length;
+    return { recommendedSpace: space, recommendedCount: count, isIndoorRecommended: isIndoor };
+  }, [weather, allEvents]);
+
+  // 1. TODAY'S PICK (추천 행사 - 날씨 기반 1개 + 일반 2개)
   const todaysPicks = useMemo(() => {
-    return allEvents.slice(0, 3);
-  }, [allEvents]);
+    const weatherRecs = allEvents.filter(e => e.location_type === recommendedSpace || e.location_type === "BOTH");
+    const weatherPick = weatherRecs[0];
+    
+    const genericPicks = allEvents.filter(e => e.id !== weatherPick?.id).slice(0, 2);
+    
+    const picks = [];
+    if (weatherPick) {
+      picks.push({ 
+        event: weatherPick, 
+        reason: isIndoorRecommended ? "☁️ 오늘 날씨에 딱 좋아요" : "☀️ 오늘 날씨에 딱 좋아요" 
+      });
+    }
+    genericPicks.forEach(e => picks.push({ event: e }));
+    return picks;
+  }, [allEvents, recommendedSpace, isIndoorRecommended]);
 
   // 2. THIS WEEKEND (이번 주말 진행)
   const weekendEvents = useMemo(() => {
@@ -101,125 +123,143 @@ export default function HomePage() {
   };
 
   return (
-    <main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-20 pt-6 lg:max-w-5xl">
+    <main className="mx-auto flex w-full max-w-7xl flex-col px-6 pb-24 pt-4 lg:px-8">
       {/* 상단 통합 네비게이션 헤더 */}
-      <header className="flex items-center justify-between border-b pb-4">
-        <Link href="/" className="text-xl font-black text-brand tracking-tight">
-          오늘뭐보지?
-        </Link>
-        <nav className="flex items-center gap-3">
-          <Link
-            href="/events"
-            className="flex items-center gap-1 text-sm font-semibold text-neutral-600 hover:text-brand transition-colors"
-          >
-            <Compass className="h-4 w-4" />
-            <span>탐색</span>
+      <header className="flex items-center justify-between border-b pb-4 gap-2 md:gap-4">
+        <div className="flex items-center gap-3 shrink-0">
+          <Link href="/" className="text-xl font-black text-brand tracking-tight shrink-0">
+            오늘뭐보지?
           </Link>
-          <Link
-            href="/my"
-            className="flex items-center gap-1 text-sm font-semibold text-neutral-600 hover:text-brand transition-colors"
-          >
-            <Heart className="h-4 w-4 text-rose-500" />
-            <span>MY</span>
-          </Link>
-        </nav>
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand to-rose-accent px-3 py-1 text-[11px] font-extrabold text-white shadow-sm">
+            <Ticket className="h-3.5 w-3.5" />
+            TODAY {Number(today.split("-")[1])}.{Number(today.split("-")[2])}
+          </span>
+        </div>
+        
+        <div className="flex flex-1 items-center gap-3 md:gap-6 justify-end">
+          <div className="w-full max-w-[240px] sm:max-w-[320px] md:max-w-[400px]">
+            {/* 검색창 (자동완성 기능 적용) */}
+            <Autocomplete
+              value={filters.keyword}
+              onChange={(keyword) => setFilters((prev) => ({ ...prev, keyword }))}
+              onSearchSubmit={handleSearchSubmit}
+            />
+          </div>
+
+          <nav className="flex items-center gap-2 md:gap-3 shrink-0">
+            <Link
+              href="/events"
+              className="flex items-center gap-1 text-sm font-semibold text-neutral-600 hover:text-brand transition-colors"
+            >
+              <Compass className="h-5 w-5 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">탐색</span>
+            </Link>
+            <Link
+              href="/my"
+              className="flex items-center gap-1 text-sm font-semibold text-neutral-600 hover:text-brand transition-colors"
+            >
+              <Heart className="h-5 w-5 md:h-4 md:w-4 text-rose-500" />
+              <span className="hidden sm:inline">MY</span>
+            </Link>
+          </nav>
+        </div>
       </header>
 
-      <TodayBadge today={today} count={todayActiveCount} />
+      <div className="mx-auto mt-6 flex w-full max-w-4xl flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 md:gap-8">
+        <div className="shrink-0">
+          <TodayBadge count={todayActiveCount} />
+        </div>
 
-      {/* 스마트 날씨 배너 */}
-      <WeatherBanner
-        weather={weather}
-        loading={weatherLoading}
-        currentFilter={filters.locationType || "ALL"}
-        onFilterChange={(locationType) =>
-          setFilters((prev) => ({ ...prev, locationType }))
-        }
-      />
+        {/* 스마트 날씨 배너 */}
+        <div className="w-full sm:max-w-[340px] md:max-w-sm shrink-0">
+          <WeatherBanner
+            weather={weather}
+            loading={weatherLoading}
+            recommendedCount={recommendedCount}
+          />
+        </div>
+      </div>
 
-      {/* 검색창 (자동완성 기능 적용) */}
-      <Autocomplete
-        value={filters.keyword}
-        onChange={(keyword) => setFilters((prev) => ({ ...prev, keyword }))}
-        onSearchSubmit={handleSearchSubmit}
-      />
-
-      {/* 빠른 날짜 탐색 버튼 그룹 */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-bold text-neutral-800 flex items-center gap-1.5">
-          <Calendar className="h-4 w-4 text-brand" />
-          빠른 날짜 탐색
+      {/* 🗓️ 빠른 탐색 카드 */}
+      <section className="mx-auto mt-6 w-full max-w-4xl rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm md:p-4 flex flex-col md:flex-row md:items-center gap-3 md:gap-5">
+        <h2 className="text-sm font-extrabold text-neutral-900 flex items-center gap-1.5 shrink-0">
+          <Compass className="h-4 w-4 text-brand" />
+          빠른 탐색
         </h2>
-        <div className="flex gap-2">
-          <Link
-            href="/events?date=today"
-            className="flex-1 rounded-xl bg-white border border-neutral-200 py-3 text-center text-sm font-bold text-neutral-700 hover:border-brand hover:text-brand transition-colors"
-          >
-            오늘
-          </Link>
-          <Link
-            href="/events?date=thisweek"
-            className="flex-1 rounded-xl bg-white border border-neutral-200 py-3 text-center text-sm font-bold text-neutral-700 hover:border-brand hover:text-brand transition-colors"
-          >
-            이번 주
-          </Link>
-          <Link
-            href="/events?date=weekend"
-            className="flex-1 rounded-xl bg-white border border-neutral-200 py-3 text-center text-sm font-bold text-neutral-700 hover:border-brand hover:text-brand transition-colors"
-          >
-            이번 주말
-          </Link>
-          {/* 날짜 선택 피커 트리거 버튼 */}
-          <div className="relative flex-1">
-            <button
-              onClick={() => {
-                const input = document.getElementById("home-date-picker") as HTMLInputElement | null;
-                input?.showPicker?.();
-                input?.click();
-              }}
-              className="w-full h-full rounded-xl bg-white border border-neutral-200 py-3 px-2 text-center text-sm font-bold text-neutral-700 hover:border-brand hover:text-brand transition-colors flex items-center justify-center gap-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              날짜
-            </button>
-            <input
-              id="home-date-picker"
-              type="date"
-              aria-label="날짜 선택"
-              className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val) router.push(`/events?date=custom&customDate=${val}`);
-              }}
-            />
+
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 w-full">
+          {/* 날짜 필터 */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {[
+              { label: "오늘", href: "/events?date=today" },
+              { label: "이번 주", href: "/events?date=thisweek" },
+              { label: "이번 주말", href: "/events?date=weekend" },
+            ].map((d) => (
+              <Link
+                key={d.label}
+                href={d.href}
+                className="rounded-full bg-neutral-100 px-3.5 py-1.5 text-[13px] font-bold text-neutral-600 transition-colors hover:bg-brand hover:text-white focus:bg-brand focus:text-white active:bg-brand active:text-white"
+              >
+                {d.label}
+              </Link>
+            ))}
+            
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const input = document.getElementById("home-date-picker") as HTMLInputElement | null;
+                  input?.showPicker?.();
+                  input?.click();
+                }}
+                className="rounded-full bg-neutral-100 px-3.5 py-1.5 text-[13px] font-bold text-neutral-600 transition-colors hover:bg-brand hover:text-white focus:bg-brand focus:text-white active:bg-brand active:text-white flex items-center gap-1"
+              >
+                <Calendar className="h-3.5 w-3.5 shrink-0" />
+                날짜
+              </button>
+              <input
+                id="home-date-picker"
+                type="date"
+                aria-label="날짜 선택"
+                className="absolute inset-0 opacity-0 pointer-events-none w-full h-full"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) router.push(`/events?date=custom&customDate=${val}`);
+                }}
+              />
+            </div>
+          </div>
+
+          {/* 구분선 */}
+          <div className="hidden sm:block h-4 w-px bg-neutral-200 shrink-0" />
+
+          {/* 카테고리 필터 */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {DISPLAY_CATEGORIES.filter((c) => c !== "전체").map((cat) => (
+              <Link
+                key={cat}
+                href={`/events?category=${encodeURIComponent(cat)}`}
+                className="rounded-full bg-neutral-100 px-3.5 py-1.5 text-[13px] font-bold text-neutral-600 transition-colors hover:bg-brand hover:text-white focus:bg-brand focus:text-white active:bg-brand active:text-white"
+              >
+                {cat}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 콘텐츠별 탐색 - 대분류 3종 */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-bold text-neutral-800">콘텐츠별 탐색</h2>
-        <div className="grid grid-cols-3 gap-2">
-          {DISPLAY_CATEGORIES.filter((c) => c !== "전체").map((cat) => (
-            <Link
-              key={cat}
-              href={`/events?category=${encodeURIComponent(cat)}`}
-              className="rounded-xl bg-neutral-50 p-3 text-center hover:bg-neutral-100 transition-colors"
-            >
-              <span className="block text-xs font-bold text-neutral-800">{cat}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
       {/* 큐레이션 데이터 섹션 */}
-      <div className="space-y-6 mt-4">
+      <div className="mx-auto mt-8 w-full max-w-[1200px] space-y-6">
         {/* TODAY'S PICK */}
         <section className="space-y-3">
-          <h2 className="text-base font-bold text-neutral-900">🔥 TODAY&apos;S PICK (추천 행사)</h2>
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
+            <h2 className="text-base font-extrabold text-neutral-900 flex items-center gap-1.5">
+              <span className="text-xl">🔥</span> 오늘의 PICK
+            </h2>
+            <p className="text-sm text-neutral-500 font-medium">지금 가기 좋은 행사들을 골라봤어요.</p>
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {todaysPicks.map((event) => (
-              <EventCard key={event.id} event={event} />
+            {todaysPicks.map(({ event, reason }) => (
+              <EventCard key={event.id} event={event} recommendationReason={reason} />
             ))}
           </div>
         </section>

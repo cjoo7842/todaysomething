@@ -1,22 +1,11 @@
-interface TodayBadgeProps {
-  today: string; // "YYYY-MM-DD"
-  count: number;
-}
-
-export function TodayBadge({ today, count }: TodayBadgeProps) {
-  const [, month, day] = today.split("-");
-  const monthNum = Number(month);
-  const dayNum = Number(day);
-
+export function TodayBadge({ count }: { count: number }) {
   return (
-    <div className="flex flex-col gap-2">
-      <span className="inline-flex w-fit items-center rounded-full bg-gradient-to-r from-brand to-rose-accent px-3 py-1 text-xs font-bold text-white">
-        TODAY {monthNum}.{dayNum}
+    <h1 className="flex items-baseline gap-1 md:gap-2 text-2xl font-black tracking-tight text-neutral-900 lg:text-3xl">
+      <span>오늘 서울 문화행사</span>
+      <span className="text-brand text-4xl lg:text-5xl font-black">
+        {count}
+        <span className="text-2xl lg:text-3xl ml-0.5">건</span>
       </span>
-      <h1 className="text-2xl font-bold tracking-tight text-neutral-900 lg:text-3xl">
-        오늘 서울 문화행사{" "}
-        <span className="text-brand">{count}건</span>
-      </h1>
-    </div>
+    </h1>
   );
 }

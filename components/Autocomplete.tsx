@@ -124,7 +124,7 @@ export function Autocomplete({ value, onChange, onSearchSubmit }: AutocompletePr
           onKeyDown={handleKeyDown}
           placeholder="행사명, 장소, 지역, 카테고리로 검색해보세요"
           aria-label="행사 검색"
-          className="w-full rounded-full border border-neutral-200 bg-white py-2.5 pl-9 pr-4 text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+          className="w-full rounded-full border border-neutral-200 bg-white py-2 sm:py-2.5 pl-8 sm:pl-9 pr-4 text-[12px] sm:text-sm text-neutral-900 placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-white text-ellipsis overflow-hidden whitespace-nowrap"
         />
       </div>
 

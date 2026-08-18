@@ -89,6 +89,10 @@ function EventsContent() {
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
   const [showFullFilters, setShowFullFilters] = useState(false);
 
+  const hasQuickFilterApplied = useMemo(() => {
+    return filters.dateFilter !== "all" || filters.category !== "전체" || filters.locationType !== "ALL" || !!filters.keyword;
+  }, [filters]);
+
   // URL 파라미터가 바뀌면 내부 필터 상태도 업데이트
   useEffect(() => {
     setFilters(initialFilters);
@@ -174,37 +178,58 @@ function EventsContent() {
         </nav>
       </header>
 
-      {/* 날짜 조건이 적용되었을 때의 간이 헤더 */}
-      {filters.dateFilter !== "all" && !showFullFilters && (
-        <section className="flex items-center justify-between rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm animate-fade-in">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-neutral-400">날짜 조건</span>
-            <span className="inline-flex items-center rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">
-              {filters.dateFilter === "today"
-                ? "오늘"
-                : filters.dateFilter === "thisweek"
-                ? "이번 주"
-                : filters.dateFilter === "weekend"
-                ? "이번 주말"
-                : filters.dateFilter === "custom" && filters.customDate
-                ? (() => { const [, m, d] = filters.customDate.split("-"); return `${Number(m)}.${Number(d)}`; })()
-                : filters.dateFilter}
-            </span>
+      {/* 퀵 필터가 적용되었을 때의 간이 헤더 */}
+      {hasQuickFilterApplied && !showFullFilters && (
+        <section className="flex items-start sm:items-center justify-between rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm animate-fade-in gap-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-neutral-400 mr-1">검색 조건</span>
+            
+            {filters.dateFilter !== "all" && (
+              <span className="inline-flex items-center rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">
+                {filters.dateFilter === "today"
+                  ? "오늘"
+                  : filters.dateFilter === "thisweek"
+                  ? "이번 주"
+                  : filters.dateFilter === "weekend"
+                  ? "이번 주말"
+                  : filters.dateFilter === "custom" && filters.customDate
+                  ? (() => { const [, m, d] = filters.customDate.split("-"); return `${Number(m)}.${Number(d)}`; })()
+                  : filters.dateFilter}
+              </span>
+            )}
+
+            {filters.category !== "전체" && (
+              <span className="inline-flex items-center rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">
+                {filters.category}
+              </span>
+            )}
+
+            {filters.locationType !== "ALL" && (
+              <span className="inline-flex items-center rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">
+                {filters.locationType === "INDOOR" ? "🏢 실내" : "🌳 실외"}
+              </span>
+            )}
+
+            {filters.keyword && (
+              <span className="inline-flex items-center rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">
+                &quot;{filters.keyword}&quot;
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setShowFullFilters(true)}
               className="flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              <span>변경</span>
+              <span>필터 변경</span>
             </button>
           </div>
         </section>
       )}
 
       {/* 복합 필터 바 */}
-      {(filters.dateFilter === "all" || showFullFilters) && (
+      {(!hasQuickFilterApplied || showFullFilters) && (
         <section className="space-y-4 rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm animate-fade-in">
           {/* 키워드 검색창 */}
           <div>
