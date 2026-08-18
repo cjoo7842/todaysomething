@@ -118,8 +118,8 @@ export function filterAndSortEvents(
     (filters.areaName !== "전체" ? getLivingZoneByName(filters.areaName) : undefined);
 
   const filtered = events.filter((event) => {
-    // isPermanent(상시 개방) 장소는 날짜 필터를 무시하고 항상 포함
-    const skipDateFilter = event.isPermanent === true;
+    // isPermanent 또는 isAlwaysOpen(상시 개방) 장소는 날짜 필터를 무시하고 항상 포함
+    const skipDateFilter = event.isPermanent === true || event.isAlwaysOpen === true;
 
     // 1. 날짜 필터
     if (!skipDateFilter) {
@@ -207,9 +207,11 @@ export function filterAndSortEvents(
 
   return [...filtered].sort((a, b) => {
     if (sort === "urgency") {
-      if (a.isPermanent && b.isPermanent) return 0;
-      if (a.isPermanent) return 1;
-      if (b.isPermanent) return -1;
+      const aPerm = a.isPermanent || a.isAlwaysOpen;
+      const bPerm = b.isPermanent || b.isAlwaysOpen;
+      if (aPerm && bPerm) return 0;
+      if (aPerm) return 1;
+      if (bPerm) return -1;
       return daysUntilEnd(a.endDate, today) - daysUntilEnd(b.endDate, today);
     }
     if (sort === "district") {
