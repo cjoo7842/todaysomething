@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Heart } from "lucide-react";
+import { ArrowLeft, Heart, SlidersHorizontal } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { EmptyState } from "@/components/EmptyState";
@@ -51,10 +51,12 @@ function EventsContent() {
 
   const [filters, setFilters] = useState<EventFilters>(initialFilters);
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
+  const [showFullFilters, setShowFullFilters] = useState(false);
 
   // URL 파라미터가 바뀌면 내부 필터 상태도 업데이트
   useEffect(() => {
     setFilters(initialFilters);
+    setShowFullFilters(false);
   }, [initialFilters]);
 
   useEffect(() => {
@@ -113,151 +115,38 @@ function EventsContent() {
         </nav>
       </header>
 
-      {/* 복합 필터 바 */}
-      <section className="space-y-4 rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
-        {/* 키워드 검색창 */}
-        <div>
-          <input
-            type="text"
-            value={filters.keyword}
-            onChange={(e) => handleFilterChange({ ...filters, keyword: e.target.value })}
-            placeholder="키워드로 바로 검색"
-            className="w-full rounded-xl border border-neutral-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
-          />
-        </div>
-
-        {/* 날짜 선택 */}
-        <div>
-          <label className="block text-xs font-bold text-neutral-500 mb-2">날짜</label>
-          <div className="flex gap-2">
-            {[
-              { id: "all", label: "전체" },
-              { id: "today", label: "오늘" },
-              { id: "thisweek", label: "이번 주" },
-              { id: "weekend", label: "이번 주말" },
-            ].map((d) => (
-              <button
-                key={d.id}
-                onClick={() => handleFilterChange({ ...filters, dateFilter: d.id as any })}
-                className={cn(
-                  "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
-                  filters.dateFilter === d.id
-                    ? "border-brand bg-brand text-white"
-                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-                )}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 지역 선택 (서울 25개 자치구) */}
-        <div>
-          <label className="block text-xs font-bold text-neutral-500 mb-2">지역 (자치구)</label>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {SEOUL_DISTRICTS.map((d) => (
-              <button
-                key={d}
-                onClick={() => handleFilterChange({ ...filters, district: d })}
-                className={cn(
-                  "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                  filters.district === d
-                    ? "border-brand bg-brand text-white"
-                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-                )}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 카테고리(콘텐츠) 선택 - 대분류 3종 */}
-        <div>
-          <label className="block text-xs font-bold text-neutral-500 mb-2">콘텐츠</label>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {DISPLAY_CATEGORIES.map((c) => (
-              <button
-                key={c}
-                onClick={() => handleFilterChange({ ...filters, category: c })}
-                className={cn(
-                  "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
-                  filters.category === c
-                    ? "border-brand bg-brand text-white"
-                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-                )}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 가격 종류 선택 */}
-        <div>
-          <label className="block text-xs font-bold text-neutral-500 mb-2">가격</label>
-          <div className="flex gap-2">
-            {[
-              { id: "all", label: "전체" },
-              { id: "free", label: "무료" },
-              { id: "paid", label: "유료" },
-            ].map((p) => (
-              <button
-                key={p.id}
-                onClick={() => handleFilterChange({ ...filters, priceFilter: p.id as any })}
-                className={cn(
-                  "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
-                  filters.priceFilter === p.id
-                    ? "border-brand bg-brand text-white"
-                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-                )}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 공간 유형 선택 */}
-        <div>
-          <label className="block text-xs font-bold text-neutral-500 mb-2">공간</label>
-          <div className="flex gap-2">
-            {[
-              { id: "ALL", label: "전체 공간" },
-              { id: "INDOOR", label: "🏢 실내" },
-              { id: "OUTDOOR", label: "🌳 실외" },
-            ].map((s) => (
-              <button
-                key={s.id}
-                onClick={() => handleFilterChange({ ...filters, locationType: s.id as any })}
-                className={cn(
-                  "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
-                  filters.locationType === s.id
-                    ? "border-brand bg-brand text-white"
-                    : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-                )}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 정렬 & 초기화 */}
-        <div className="flex items-center justify-between pt-2 border-t text-sm">
-          <button
-            onClick={() => handleFilterChange(DEFAULT_FILTERS)}
-            className="text-xs font-semibold text-neutral-400 hover:text-brand transition-colors"
-          >
-            필터 전체 초기화
-          </button>
+      {/* 날짜 조건이 적용되었을 때의 간이 헤더 */}
+      {filters.dateFilter !== "all" && (
+        <section className="flex items-center justify-between rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm animate-fade-in">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-neutral-400">정렬 기준</span>
+            <span className="text-xs font-bold text-neutral-400">날짜 조건</span>
+            <span className="inline-flex items-center rounded-full bg-brand/10 px-3 py-1 text-xs font-bold text-brand">
+              {filters.dateFilter === "today"
+                ? "오늘"
+                : filters.dateFilter === "thisweek"
+                ? "이번 주"
+                : filters.dateFilter === "weekend"
+                ? "이번 주말"
+                : filters.dateFilter}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowFullFilters((prev) => !prev)}
+              className={cn(
+                "flex items-center gap-1 rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors",
+                showFullFilters
+                  ? "border-brand bg-brand text-white"
+                  : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+              )}
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span>필터</span>
+            </button>
             <select
               value={sort}
               onChange={(e) => handleSortChange(e.target.value as SortOption)}
-              className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand"
+              className="rounded-lg border border-neutral-200 bg-white px-2 py-1.5 text-xs font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand"
             >
               <option value="urgency">마감임박순</option>
               <option value="district">지역순</option>
@@ -265,8 +154,165 @@ function EventsContent() {
               <option value="freeFirst">무료우선</option>
             </select>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
+
+      {/* 복합 필터 바 */}
+      {(filters.dateFilter === "all" || showFullFilters) && (
+        <section className="space-y-4 rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm animate-fade-in">
+          {/* 키워드 검색창 */}
+          <div>
+            <input
+              type="text"
+              value={filters.keyword}
+              onChange={(e) => handleFilterChange({ ...filters, keyword: e.target.value })}
+              placeholder="키워드로 바로 검색"
+              className="w-full rounded-xl border border-neutral-200 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            />
+          </div>
+
+          {/* 날짜 선택 */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 mb-2">날짜</label>
+            <div className="flex gap-2">
+              {[
+                { id: "all", label: "전체" },
+                { id: "today", label: "오늘" },
+                { id: "thisweek", label: "이번 주" },
+                { id: "weekend", label: "이번 주말" },
+              ].map((d) => (
+                <button
+                  key={d.id}
+                  onClick={() => handleFilterChange({ ...filters, dateFilter: d.id as any })}
+                  className={cn(
+                    "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
+                    filters.dateFilter === d.id
+                      ? "border-brand bg-brand text-white"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  )}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 지역 선택 (서울 25개 자치구) */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 mb-2">지역 (자치구)</label>
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {SEOUL_DISTRICTS.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => handleFilterChange({ ...filters, district: d })}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                    filters.district === d
+                      ? "border-brand bg-brand text-white"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  )}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 카테고리(콘텐츠) 선택 - 대분류 3종 */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 mb-2">콘텐츠</label>
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {DISPLAY_CATEGORIES.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => handleFilterChange({ ...filters, category: c })}
+                  className={cn(
+                    "shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors",
+                    filters.category === c
+                      ? "border-brand bg-brand text-white"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  )}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 가격 종류 선택 */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 mb-2">가격</label>
+            <div className="flex gap-2">
+              {[
+                { id: "all", label: "전체" },
+                { id: "free", label: "무료" },
+                { id: "paid", label: "유료" },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => handleFilterChange({ ...filters, priceFilter: p.id as any })}
+                  className={cn(
+                    "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
+                    filters.priceFilter === p.id
+                      ? "border-brand bg-brand text-white"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 공간 유형 선택 */}
+          <div>
+            <label className="block text-xs font-bold text-neutral-500 mb-2">공간</label>
+            <div className="flex gap-2">
+              {[
+                { id: "ALL", label: "전체 공간" },
+                { id: "INDOOR", label: "🏢 실내" },
+                { id: "OUTDOOR", label: "🌳 실외" },
+              ].map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => handleFilterChange({ ...filters, locationType: s.id as any })}
+                  className={cn(
+                    "flex-1 rounded-lg border py-2 text-center text-xs font-semibold transition-colors",
+                    filters.locationType === s.id
+                      ? "border-brand bg-brand text-white"
+                      : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+                  )}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 정렬 & 초기화 */}
+          <div className="flex items-center justify-between pt-2 border-t text-sm">
+            <button
+              onClick={() => handleFilterChange(DEFAULT_FILTERS)}
+              className="text-xs font-semibold text-neutral-400 hover:text-brand transition-colors"
+            >
+              필터 전체 초기화
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-neutral-400">정렬 기준</span>
+              <select
+                value={sort}
+                onChange={(e) => handleSortChange(e.target.value as SortOption)}
+                className="rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs font-semibold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand"
+              >
+                <option value="urgency">마감임박순</option>
+                <option value="district">지역순</option>
+                <option value="latestStart">최근시작순</option>
+                <option value="freeFirst">무료우선</option>
+              </select>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 리스트 뷰 영역 */}
       <div>

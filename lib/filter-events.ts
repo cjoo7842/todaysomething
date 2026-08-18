@@ -10,7 +10,8 @@ export interface EventFilters {
   freeOnly: boolean;
   keyword: string;
   locationType: 'ALL' | 'INDOOR' | 'OUTDOOR';
-  dateFilter: 'all' | 'today' | 'weekend' | 'thisweek';
+  dateFilter: 'all' | 'today' | 'weekend' | 'thisweek' | 'customDate';
+  customDateValue: string; // 'customDate' 선택 시 사용할 날짜 (YYYY-MM-DD)
   areaName: string; // 하위 호환: 생활권역명 필터 (별도 사용 시)
   priceFilter: 'all' | 'free' | 'paid';
 }
@@ -25,6 +26,7 @@ export const DEFAULT_FILTERS: EventFilters = {
   keyword: "",
   locationType: "ALL",
   dateFilter: "all",
+  customDateValue: "",
   areaName: "전체",
   priceFilter: "all",
 };
@@ -41,20 +43,29 @@ export function filterAndSortEvents(
   const keyword = filters.keyword.trim().toLowerCase();
 
   const filtered = events.filter((event) => {
-    // 1. 날짜 필터 (오늘 진행중 여부 뿐만 아니라 오늘, 이번주말, 이번주 퀵 필터 적용)
-    if (filters.dateFilter === "today" && !isTodayEvent(event.startDate, event.endDate, today)) {
-      return false;
-    }
-    if (filters.dateFilter === "weekend" && !isWeekendEvent(event.startDate, event.endDate, today)) {
-      return false;
-    }
-    if (filters.dateFilter === "thisweek" && !isThisWeekEvent(event.startDate, event.endDate, today)) {
-      return false;
-    }
-    // 기본 'all' 일 때는 "오늘 진행중인" 것만 보여주는 것이 원래 기본값이므로 기존 active 상태 체크
-    if (filters.dateFilter === "all") {
-      const active = today >= event.startDate && today <= event.endDate;
-      if (!active) return false;
+    // isAlwaysOpen(상시 개방) 장소는 날짜 필터를 무시하고 항상 포함
+    const skipDateFilter = event.isAlwaysOpen === true;
+
+    // 1. 날짜 필터
+    if (!skipDateFilter) {
+      if (filters.dateFilter === "today" && !isTodayEvent(event.startDate, event.endDate, today)) {
+        return false;
+      }
+      if (filters.dateFilter === "weekend" && !isWeekendEvent(event.startDate, event.endDate, today)) {
+        return false;
+      }
+      if (filters.dateFilter === "thisweek" && !isThisWeekEvent(event.startDate, event.endDate, today)) {
+        return false;
+      }
+      if (filters.dateFilter === "customDate" && filters.customDateValue) {
+        const d = filters.customDateValue;
+        if (!(d >= event.startDate && d <= event.endDate)) return false;
+      }
+      // 기본 'all' 일 때는 오늘 진행중인 것만
+      if (filters.dateFilter === "all") {
+        const active = today >= event.startDate && today <= event.endDate;
+        if (!active) return false;
+      }
     }
 
     // 2. 자치구 필터 (서울 25개 구 직접 매칭 - 우선)
