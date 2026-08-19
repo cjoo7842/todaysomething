@@ -13,6 +13,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { CalendarModal } from "@/components/CalendarModal";
 import { EventCard } from "@/components/EventCard";
+import type { CultureEvent } from "@/types/event";
 
 interface EventDetailPageProps {
   params: { id: string };
