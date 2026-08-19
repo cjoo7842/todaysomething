@@ -11,6 +11,7 @@ import { EventCard } from "@/components/EventCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { EmptyState } from "@/components/EmptyState";
 import { getMockEvents } from "@/lib/mock-events";
+import { useEvents } from "@/hooks/useEvents";
 import { getTodaySeoul, isEndingSoon, isWeekendEvent } from "@/lib/date";
 import { DISPLAY_CATEGORIES } from "@/lib/categories";
 import { getLivingZoneById } from "@/lib/districts";
@@ -32,7 +33,7 @@ import { cn } from "@/lib/utils";
 export default function HomePage() {
   const router = useRouter();
   const today = useMemo(() => getTodaySeoul(), []);
-  const allEvents = useMemo(() => getMockEvents(), []);
+  const allEvents = useEvents();
 
   const [filters, setFilters] = useState<EventFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortOption>(DEFAULT_SORT);
@@ -72,7 +73,7 @@ export default function HomePage() {
     const weatherRecs = allEvents.filter(e => e.location_type === recommendedSpace || e.location_type === "BOTH");
     const weatherPick = weatherRecs[0];
     
-    const genericPicks = allEvents.filter(e => e.id !== weatherPick?.id).slice(0, 2);
+    const genericPicks = allEvents.filter(e => e.id !== weatherPick?.id).slice(0, 3);
     
     const picks = [];
     if (weatherPick) {
@@ -87,17 +88,17 @@ export default function HomePage() {
 
   // 2. THIS WEEKEND (이번 주말 진행)
   const weekendEvents = useMemo(() => {
-    return allEvents.filter((e) => isWeekendEvent(e, today)).slice(0, 3);
+    return allEvents.filter((e) => isWeekendEvent(e, today)).slice(0, 4);
   }, [allEvents, today]);
 
   // 3. FREE IN SEOUL (무료 행사)
   const freeEvents = useMemo(() => {
-    return allEvents.filter((e) => e.isFree).slice(0, 3);
+    return allEvents.filter((e) => e.isFree).slice(0, 4);
   }, [allEvents]);
 
   // 4. ENDING SOON (7일 이내 마감)
   const endingSoonEvents = useMemo(() => {
-    return allEvents.filter((e) => isEndingSoon(e, today, 7)).slice(0, 3);
+    return allEvents.filter((e) => isEndingSoon(e, today, 7)).slice(0, 4);
   }, [allEvents, today]);
 
   // 키워드 자동완성 선택 시, /events 페이지로 복합 검색 이동
@@ -257,7 +258,7 @@ export default function HomePage() {
             </h2>
             <p className="text-sm text-neutral-500 font-medium">지금 가기 좋은 행사들을 골라봤어요.</p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {todaysPicks.map(({ event, reason }) => (
               <EventCard key={event.id} event={event} recommendationReason={reason} />
             ))}
@@ -270,7 +271,7 @@ export default function HomePage() {
           {weekendEvents.length === 0 ? (
             <p className="text-sm text-neutral-500">이번 주말 예정된 행사가 없습니다.</p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {weekendEvents.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
@@ -281,7 +282,7 @@ export default function HomePage() {
         {/* FREE IN SEOUL */}
         <section className="space-y-3">
           <h2 className="text-base font-bold text-neutral-900">🎁 서울 무료 행사</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {freeEvents.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}
@@ -294,7 +295,7 @@ export default function HomePage() {
           {endingSoonEvents.length === 0 ? (
             <p className="text-sm text-neutral-500">마감이 임박한 행사가 없습니다.</p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {endingSoonEvents.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
@@ -379,7 +380,7 @@ export default function HomePage() {
         )}
 
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -389,7 +390,7 @@ export default function HomePage() {
             <EmptyState onReset={() => setFilters(DEFAULT_FILTERS)} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mt-4">
             {visibleEvents.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}

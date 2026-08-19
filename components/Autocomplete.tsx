@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Search } from "lucide-react";
-import { getMockEvents } from "@/lib/mock-events";
+import { useEvents } from "@/hooks/useEvents";
 import { getAreaNameByDistrict } from "@/lib/areas";
 import { getDisplayCategory } from "@/lib/categories";
 
@@ -16,6 +16,8 @@ export function Autocomplete({ value, onChange, onSearchSubmit }: AutocompletePr
   const [suggestions, setSuggestions] = useState<Array<{ type: string; text: string }>>([]);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  const events = useEvents();
 
   useEffect(() => {
     // 바깥 클릭 시 닫기
@@ -36,7 +38,6 @@ export function Autocomplete({ value, onChange, onSearchSubmit }: AutocompletePr
       return;
     }
 
-    const events = getMockEvents();
     const matches: Array<{ type: string; text: string }> = [];
     const seen = new Set<string>();
 
@@ -91,7 +92,7 @@ export function Autocomplete({ value, onChange, onSearchSubmit }: AutocompletePr
 
     setSuggestions(matches.slice(0, 5));
     setIsOpen(matches.length > 0);
-  }, [value]);
+  }, [value, events]);
 
   const handleSelect = (text: string) => {
     onChange(text);

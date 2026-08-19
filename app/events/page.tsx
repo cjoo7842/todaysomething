@@ -9,7 +9,7 @@ import { FilterChips } from "@/components/FilterChips";
 import { FilterModal } from "@/components/FilterModal";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { EmptyState } from "@/components/EmptyState";
-import { getMockEvents } from "@/lib/mock-events";
+import { useEvents } from "@/hooks/useEvents";
 import { getTodaySeoul } from "@/lib/date";
 import {
   DEFAULT_FILTERS,
@@ -426,7 +426,7 @@ function EventsContent() {
       <div>
         <h2 className="text-sm font-bold text-neutral-800 mb-3">행사 목록 ({visibleEvents.length}개)</h2>
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 3 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
@@ -434,7 +434,7 @@ function EventsContent() {
         ) : visibleEvents.length === 0 ? (
           <EmptyState onReset={() => handleFilterChange(EVENTS_DEFAULT_FILTERS)} />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {visibleEvents.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}

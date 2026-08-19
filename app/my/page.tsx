@@ -4,13 +4,13 @@ import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, Heart, History, Trash2 } from "lucide-react";
 import { EventCard } from "@/components/EventCard";
-import { getMockEvents } from "@/lib/mock-events";
+import { useEvents } from "@/hooks/useEvents";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { cn } from "@/lib/utils";
 
 export default function MyPage() {
-  const allEvents = useMemo(() => getMockEvents(), []);
+  const allEvents = useEvents();
   const { favoriteIds } = useFavorites();
   const { recentlyViewedIds } = useRecentlyViewed();
 
@@ -107,7 +107,7 @@ export default function MyPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {favoriteEvents.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
@@ -134,7 +134,7 @@ export default function MyPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {recentEvents.map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}

@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Info, Globe, Building } from "lucide-react";
-import { getMockEvents } from "@/lib/mock-events";
+import { useEvents } from "@/hooks/useEvents";
 import { EventCard } from "@/components/EventCard";
 
 interface PlaceDetailPageProps {
@@ -13,7 +13,7 @@ interface PlaceDetailPageProps {
 
 export default function PlaceDetailPage({ params }: PlaceDetailPageProps) {
   const placeName = decodeURIComponent(params.name);
-  const allEvents = useMemo(() => getMockEvents(), []);
+  const allEvents = useEvents();
 
   // 이 장소명과 일치하는 행사 목록 추출
   const placeEvents = useMemo(() => {
@@ -101,7 +101,7 @@ export default function PlaceDetailPage({ params }: PlaceDetailPageProps) {
         <h3 className="text-base font-bold text-neutral-900 flex items-center gap-2">
           🏛️ 이 공간에서 진행 중인 행사 ({placeEvents.length}개)
         </h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {placeEvents.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}

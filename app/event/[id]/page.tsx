@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Heart, Calendar, Globe, Phone, User, Info, CalendarCheck } from "lucide-react";
-import { getMockEvents } from "@/lib/mock-events";
+import { useEvents } from "@/hooks/useEvents";
 import { getUrgencyLabel } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import { EventShareActions } from "@/components/EventShareActions";

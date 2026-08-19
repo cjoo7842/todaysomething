@@ -25,53 +25,19 @@ export function useWeather() {
 
   useEffect(() => {
     const fetchWeather = async () => {
-      const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
-      if (!apiKey) {
-        console.warn(
-          "OpenWeatherMap API Key (NEXT_PUBLIC_OPENWEATHER_API_KEY) is missing. Using fallback weather data (Seoul, 22°C, Clear)."
-        );
-        setLoading(false);
-        return;
-      }
-
       try {
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=Seoul&appid=${apiKey}&units=metric&lang=kr`;
-        const res = await fetch(url);
+        const res = await fetch("/api/weather");
         if (!res.ok) {
           throw new Error(`Weather API request failed with status ${res.status}`);
         }
         const data = await res.json();
+        
+        // 만약 API 키가 설정되지 않아서 에러 메시지가 리턴되었다면 기존 FALLBACK 유지
+        if (data.error) {
+          throw new Error(data.error);
+        }
 
-        const mainCondition = data.weather[0]?.main || "Clear";
-        const weatherId = data.weather[0]?.id || 800;
-        const description = data.weather[0]?.description || "맑음";
-
-        // 2xx (Thunderstorm), 3xx (Drizzle), 5xx (Rain) -> 비/강수
-        const isRainy =
-          (weatherId >= 200 && weatherId < 600) ||
-          mainCondition === "Rain" ||
-          mainCondition === "Drizzle" ||
-          mainCondition === "Thunderstorm";
-        // 6xx (Snow) -> 눈
-        const isSnowy = (weatherId >= 600 && weatherId < 700) || mainCondition === "Snow";
-        // 80x (Clouds) -> 구름/흐림
-        const isCloudy = (weatherId > 800 && weatherId < 900) || mainCondition === "Clouds";
-
-        // 이모지 매핑
-        let icon = "☀️";
-        if (isRainy) icon = "☔";
-        else if (isSnowy) icon = "❄️";
-        else if (isCloudy) icon = "☁️";
-        else if (weatherId >= 700 && weatherId < 800) icon = "🌫️"; // 안개 등
-
-        setWeather({
-          temp: Math.round(data.main.temp),
-          condition: mainCondition,
-          isRainy: isRainy || isSnowy,
-          isCloudy,
-          description,
-          icon,
-        });
+        setWeather(data);
       } catch (err: any) {
         console.error("Failed to fetch weather data:", err);
         setError(err.message || "Unknown error");
