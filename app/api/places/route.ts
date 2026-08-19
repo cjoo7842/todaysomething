@@ -25,7 +25,7 @@ export async function GET() {
 
   const testCall = async (keyName: string, keyValue: string) => {
     try {
-      const url = `http://apis.data.go.kr/B551011/KorService1/areaBasedList1?serviceKey=${keyValue}&numOfRows=10&pageNo=1&MobileOS=ETC&MobileApp=AppTest&_type=json&areaCode=1`;
+      const url = `http://apis.data.go.kr/B551011/KorService2/areaBasedList2?serviceKey=${keyValue}&numOfRows=10&pageNo=1&MobileOS=ETC&MobileApp=AppTest&_type=json&areaCode=1`;
       const res = await fetch(url, { next: { revalidate: 0 } });
       const text = await res.text();
       const preview = text.substring(0, 150).replace(/\n/g, ' ');
