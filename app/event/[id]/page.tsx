@@ -78,13 +78,13 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         const tourItem = placesData.find((p: any) => `place_${p.contentid}` === decodedId);
 
         if (tourItem) {
-          const mapCategory = (type: string) => {
+          const mapCategory = (type: string): EventCategory => {
             if (type === "12") return "놀거리"; 
-            if (type === "14") return "전시"; 
-            if (type === "28") return "레포츠"; 
-            if (type === "38") return "쇼핑"; 
-            if (type === "39") return "음식점"; 
-            return "문화행사";
+            if (type === "14") return "미술·전시"; 
+            if (type === "28") return "체험"; 
+            if (type === "38") return "팝업스토어"; 
+            if (type === "39") return "놀거리"; 
+            return "복합문화공간";
           };
           setEvent({
             id: `place_${tourItem.contentid}`,
