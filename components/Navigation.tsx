@@ -17,8 +17,10 @@ export function Navigation() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-neutral-100 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4 lg:max-w-5xl">
-        <Link href="/" className="flex items-center gap-1.5 text-lg font-extrabold text-brand">
-          <span>오늘뭐보지</span>
+        <Link href="/" className="flex items-center gap-2">
+          <span className="text-lg font-black text-brand tracking-tight">
+            오늘뭐하지
+          </span>
           <span className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand">서울</span>
         </Link>
 

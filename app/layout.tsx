@@ -3,8 +3,8 @@ import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "오늘뭐보지? | 서울 오늘의 전시·축제",
-  description: "오늘 서울에서 바로 갈 수 있는 전시·축제·팝업스토어를 지역별로 빠르게 찾아보세요.",
+  title: "오늘뭐하지? | 서울 오늘의 전시·축제",
+  description: "서울의 문화행사와 전시, 오늘 날씨에 딱 맞는 즐길 거리를 추천해드려요.",
 };
 
 export const viewport: Viewport = {

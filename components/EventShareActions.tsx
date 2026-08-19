@@ -137,7 +137,7 @@ export function EventShareActions({ event }: EventShareActionsProps) {
   };
 
   const googleCalendarUrl = generateGoogleCalendarUrl({
-    title: `[오늘뭐보지] ${event.title}`,
+    title: `[오늘뭐하지] ${event.title}`,
     description: `행사 안내:\n${event.description}\n\n행사 링크: ${
       typeof window !== "undefined" ? window.location.href : ""
     }`,

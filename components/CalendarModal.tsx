@@ -28,7 +28,7 @@ export function CalendarModal({ event, isOpen, onClose }: CalendarModalProps) {
   if (!isOpen) return null;
 
   const googleCalendarUrl = generateGoogleCalendarUrl({
-    title: `[오늘뭐보지] ${event.title}`,
+    title: `[오늘뭐하지] ${event.title}`,
     description: `행사 안내:\n${event.description}\n\n장소: ${event.locationName}`,
     locationName: event.locationName,
     startDate: event.startDate,

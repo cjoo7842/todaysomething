@@ -72,7 +72,7 @@ export default function HomePage() {
     const weatherRecs = allEvents.filter(e => e.location_type === recommendedSpace || e.location_type === "BOTH");
     const weatherPick = weatherRecs[0];
     
-    const genericPicks = allEvents.filter(e => e.id !== weatherPick?.id).slice(0, 3);
+    const genericPicks = allEvents.filter(e => e.id !== weatherPick?.id).slice(0, 7);
     
     const picks = [];
     if (weatherPick) {
@@ -87,17 +87,17 @@ export default function HomePage() {
 
   // 2. THIS WEEKEND (이번 주말 진행)
   const weekendEvents = useMemo(() => {
-    return allEvents.filter((e) => isWeekendEvent(e, today)).slice(0, 4);
+    return allEvents.filter((e) => isWeekendEvent(e, today)).slice(0, 8);
   }, [allEvents, today]);
 
   // 3. FREE IN SEOUL (무료 행사)
   const freeEvents = useMemo(() => {
-    return allEvents.filter((e) => e.isFree).slice(0, 4);
+    return allEvents.filter((e) => e.isFree).slice(0, 8);
   }, [allEvents]);
 
   // 4. ENDING SOON (7일 이내 마감)
   const endingSoonEvents = useMemo(() => {
-    return allEvents.filter((e) => isEndingSoon(e, today, 7)).slice(0, 4);
+    return allEvents.filter((e) => isEndingSoon(e, today, 7)).slice(0, 8);
   }, [allEvents, today]);
 
   // 키워드 자동완성 선택 시, /events 페이지로 복합 검색 이동
@@ -128,7 +128,7 @@ export default function HomePage() {
       <header className="flex items-center justify-between border-b pb-4 gap-2 md:gap-4">
         <div className="flex items-center gap-3 shrink-0">
           <Link href="/" className="text-xl font-black text-brand tracking-tight shrink-0">
-            오늘뭐보지?
+            오늘뭐하지?
           </Link>
           <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand to-rose-accent px-3 py-1 text-[11px] font-extrabold text-white shadow-sm">
             <Ticket className="h-3.5 w-3.5" />
@@ -248,55 +248,83 @@ export default function HomePage() {
       </section>
 
       {/* 큐레이션 데이터 섹션 */}
-      <div className="mx-auto mt-8 w-full max-w-[1200px] space-y-6">
+      <div className="mx-auto mt-8 w-full max-w-[1200px] space-y-8 border-b border-slate-200 pb-12 mb-10">
         {/* TODAY'S PICK */}
-        <section className="space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
-            <h2 className="text-base font-extrabold text-neutral-900 flex items-center gap-1.5">
-              <span className="text-xl">🔥</span> 오늘의 PICK
-            </h2>
-            <p className="text-sm text-neutral-500 font-medium">지금 가기 좋은 행사들을 골라봤어요.</p>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
+              <h2 className="text-lg font-extrabold text-neutral-900 flex items-center gap-1.5">
+                <span className="text-xl">🔥</span> 오늘의 PICK
+              </h2>
+              <p className="text-sm text-neutral-500 font-medium hidden sm:block">지금 가기 좋은 행사들을 골라봤어요.</p>
+            </div>
+            <Link href="/events" className="text-sm font-bold text-slate-400 hover:text-brand transition-colors shrink-0">
+              전체보기 &gt;
+            </Link>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 -mx-6 px-6 lg:-mx-8 lg:px-8">
             {todaysPicks.map(({ event, reason }) => (
-              <EventCard key={event.id} event={event} recommendationReason={reason} />
+              <div key={event.id} className="w-[85vw] min-w-[260px] sm:w-[calc(45%-1rem)] lg:w-[calc(28.5%-1rem)] snap-start shrink-0">
+                <EventCard event={event} recommendationReason={reason} customBadge="🔥 PICK" />
+              </div>
             ))}
           </div>
         </section>
 
         {/* THIS WEEKEND */}
-        <section className="space-y-3">
-          <h2 className="text-base font-bold text-neutral-900">📅 이번 주말 진행 행사</h2>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-neutral-900">📅 이번 주말 진행 행사</h2>
+            <Link href="/events" className="text-sm font-bold text-slate-400 hover:text-brand transition-colors shrink-0">
+              전체보기 &gt;
+            </Link>
+          </div>
           {weekendEvents.length === 0 ? (
             <p className="text-sm text-neutral-500">이번 주말 예정된 행사가 없습니다.</p>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 -mx-6 px-6 lg:-mx-8 lg:px-8">
               {weekendEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <div key={event.id} className="w-[85vw] min-w-[260px] sm:w-[calc(45%-1rem)] lg:w-[calc(28.5%-1rem)] snap-start shrink-0">
+                  <EventCard event={event} />
+                </div>
               ))}
             </div>
           )}
         </section>
 
         {/* FREE IN SEOUL */}
-        <section className="space-y-3">
-          <h2 className="text-base font-bold text-neutral-900">🎁 서울 무료 행사</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-neutral-900">🎁 서울 무료 행사</h2>
+            <Link href="/events" className="text-sm font-bold text-slate-400 hover:text-brand transition-colors shrink-0">
+              전체보기 &gt;
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 -mx-6 px-6 lg:-mx-8 lg:px-8">
             {freeEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <div key={event.id} className="w-[85vw] min-w-[260px] sm:w-[calc(45%-1rem)] lg:w-[calc(28.5%-1rem)] snap-start shrink-0">
+                <EventCard event={event} customBadge="🎁 무료" />
+              </div>
             ))}
           </div>
         </section>
 
         {/* ENDING SOON */}
-        <section className="space-y-3">
-          <h2 className="text-base font-bold text-neutral-900">⏰ 마감 임박 (7일 이내 종료)</h2>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-neutral-900">⏰ 마감 임박 (7일 이내 종료)</h2>
+            <Link href="/events" className="text-sm font-bold text-slate-400 hover:text-brand transition-colors shrink-0">
+              전체보기 &gt;
+            </Link>
+          </div>
           {endingSoonEvents.length === 0 ? (
             <p className="text-sm text-neutral-500">마감이 임박한 행사가 없습니다.</p>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-4 -mx-6 px-6 lg:-mx-8 lg:px-8">
               {endingSoonEvents.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <div key={event.id} className="w-[85vw] min-w-[260px] sm:w-[calc(45%-1rem)] lg:w-[calc(28.5%-1rem)] snap-start shrink-0">
+                  <EventCard event={event} customBadge="⏰ 마감임박" />
+                </div>
               ))}
             </div>
           )}
