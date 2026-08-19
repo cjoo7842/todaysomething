@@ -19,7 +19,7 @@ interface EventDetailPageProps {
 }
 
 export default function EventDetailPage({ params }: EventDetailPageProps) {
-  const allEvents = useMemo(() => getMockEvents(), []);
+  const allEvents = useEvents();
   const event = allEvents.find((e) => e.id === params.id);
 
   if (!event) {
@@ -33,7 +33,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
   // 최근 본 행사로 추가
   useEffect(() => {
     addRecentlyViewed(event.id);
-  }, [event.id]);
+  }, [event.id, addRecentlyViewed]);
 
   const urgency = getUrgencyLabel(event);
 

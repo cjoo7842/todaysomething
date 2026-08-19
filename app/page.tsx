@@ -10,7 +10,6 @@ import { FilterModal } from "@/components/FilterModal";
 import { EventCard } from "@/components/EventCard";
 import { SkeletonCard } from "@/components/SkeletonCard";
 import { EmptyState } from "@/components/EmptyState";
-import { getMockEvents } from "@/lib/mock-events";
 import { useEvents } from "@/hooks/useEvents";
 import { getTodaySeoul, isEndingSoon, isWeekendEvent } from "@/lib/date";
 import { DISPLAY_CATEGORIES } from "@/lib/categories";

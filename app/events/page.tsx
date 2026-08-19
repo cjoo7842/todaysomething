@@ -47,7 +47,7 @@ function EventsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const today = useMemo(() => getTodaySeoul(), []);
-  const allEvents = useMemo(() => getMockEvents(), []);
+  const allEvents = useEvents();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
