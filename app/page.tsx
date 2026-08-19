@@ -67,12 +67,34 @@ export default function HomePage() {
     return { recommendedSpace: space, recommendedCount: count, isIndoorRecommended: isIndoor };
   }, [weather, allEvents]);
 
-  // 1. TODAY'S PICK (추천 행사 - 날씨 기반 1개 + 일반 2개)
+  // 1. TODAY'S PICK (추천 행사 - 날씨 기반 1개 + 일반 2~7개)
   const todaysPicks = useMemo(() => {
-    const weatherRecs = allEvents.filter(e => e.location_type === recommendedSpace || e.location_type === "BOTH");
+    // 날짜 포맷 변환 (2026.08.19 또는 20260819 -> 2026-08-19)
+    const normalizeDate = (d: string) => {
+      if (!d) return "";
+      const cleaned = d.replace(/[^\d]/g, "");
+      if (cleaned.length === 8) {
+        return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 6)}-${cleaned.slice(6, 8)}`;
+      }
+      return d;
+    };
+
+    // 오늘 활성화된 이벤트 필터링 (미래 행사 및 이미 종료된 행사 제외)
+    const activeTodayEvents = allEvents.filter((e) => {
+      if (e.isPermanent || e.openHours === "상시 운영") return true;
+      const start = normalizeDate(e.startDate);
+      const end = normalizeDate(e.endDate);
+      if (start && end) {
+        return today >= start && today <= end;
+      }
+      return false; // 날짜가 불확실하면 제외
+    });
+
+    const weatherRecs = activeTodayEvents.filter(e => e.location_type === recommendedSpace || e.location_type === "BOTH");
     const weatherPick = weatherRecs[0];
     
-    const genericPicks = allEvents.filter(e => e.id !== weatherPick?.id).slice(0, 7);
+    // 날씨 픽 제외한 나머지 활성 행사들
+    const genericPicks = activeTodayEvents.filter(e => e.id !== weatherPick?.id).slice(0, 7);
     
     const picks = [];
     if (weatherPick) {
@@ -82,8 +104,9 @@ export default function HomePage() {
       });
     }
     genericPicks.forEach(e => picks.push({ event: e }));
+
     return picks;
-  }, [allEvents, recommendedSpace, isIndoorRecommended]);
+  }, [allEvents, recommendedSpace, isIndoorRecommended, today]);
 
   // 2. THIS WEEKEND (이번 주말 진행)
   const weekendEvents = useMemo(() => {
@@ -243,6 +266,12 @@ export default function HomePage() {
                 {cat}
               </Link>
             ))}
+            <Link
+              href="/events?isPermanentOnly=true"
+              className="rounded-full bg-neutral-100 px-3.5 py-1.5 text-[13px] font-bold text-neutral-600 transition-colors hover:bg-brand hover:text-white focus:bg-brand focus:text-white active:bg-brand active:text-white"
+            >
+              상시 공간
+            </Link>
           </div>
         </div>
       </section>
@@ -393,7 +422,12 @@ export default function HomePage() {
                 )}
               </button>
             </div>
-            <FilterChips livingZoneId={filters.livingZoneId} onLivingZoneChange={handleLivingZoneChange} />
+            <FilterChips 
+              livingZoneId={filters.livingZoneId} 
+              onLivingZoneChange={handleLivingZoneChange} 
+              isPermanentOnly={filters.isPermanentOnly}
+              onPermanentToggle={(value) => setFilters(prev => ({ ...prev, isPermanentOnly: value }))}
+            />
             {activeLivingZone && (
               <p className="text-xs text-neutral-500">
                 {activeLivingZone.name} · {activeLivingZone.districts.join(", ")}

@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 interface FilterChipsProps {
   livingZoneId: string;
   onLivingZoneChange: (livingZoneId: string) => void;
+  isPermanentOnly?: boolean;
+  onPermanentToggle?: (value: boolean) => void;
 }
 
 function Chip({
@@ -35,20 +37,32 @@ function Chip({
 }
 
 /** 메인 화면 상단 주요 생활권 빠른 탐색 칩 */
-export function FilterChips({ livingZoneId, onLivingZoneChange }: FilterChipsProps) {
+export function FilterChips({ livingZoneId, onLivingZoneChange, isPermanentOnly, onPermanentToggle }: FilterChipsProps) {
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" role="group" aria-label="주요 생활권">
       <Chip
+        label="상시 공간"
+        active={isPermanentOnly === true}
+        onClick={() => onPermanentToggle?.(!isPermanentOnly)}
+      />
+      <div className="h-9 w-px bg-neutral-300 mx-1"></div>
+      <Chip
         label="전체"
-        active={!livingZoneId}
-        onClick={() => onLivingZoneChange("")}
+        active={!livingZoneId && !isPermanentOnly}
+        onClick={() => {
+          onLivingZoneChange("");
+          onPermanentToggle?.(false);
+        }}
       />
       {LIVING_ZONES.map((zone) => (
         <Chip
           key={zone.id}
           label={zone.name}
           active={livingZoneId === zone.id}
-          onClick={() => onLivingZoneChange(zone.id)}
+          onClick={() => {
+            onLivingZoneChange(zone.id);
+            onPermanentToggle?.(false);
+          }}
         />
       ))}
     </div>

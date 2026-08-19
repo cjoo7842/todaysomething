@@ -36,7 +36,7 @@ export function useEvents(): CultureEvent[] {
         };
 
         const places: CultureEvent[] = placesData.map((p: any) => ({
-          id: p.contentid,
+          id: `place_${p.contentid}`,
           title: p.title || "장소명 없음",
           category: mapCategory(p.contenttypeid),
           district: p.addr1 ? p.addr1.split(" ")[1] : "서울전역",
@@ -45,9 +45,10 @@ export function useEvents(): CultureEvent[] {
           startDate: "2000-01-01",
           endDate: "2099-12-31",
           openHours: "상시 운영",
+          period: "상시 운영",
           priceInfo: "문의",
           description: p.addr1 || "",
-          imageUrl: p.firstimage || p.firstimage2 || "",
+          imageUrl: p.firstimage || p.firstimage2 || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80",
           locationName: p.title || "서울",
           mapUrl: `https://map.kakao.com/link/map/${p.title},${p.mapy},${p.mapx}`,
           location_type: p.contenttypeid === "14" || p.contenttypeid === "38" ? "INDOOR" : "OUTDOOR",

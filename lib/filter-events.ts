@@ -21,6 +21,7 @@ export interface EventFilters {
   areaName: string; // 하위 호환: 생활권역명 필터 (별도 사용 시)
   priceFilter: "all" | "free" | "paid";
   audience: AudienceFilter;
+  isPermanentOnly: boolean;
 }
 
 export type SortOption = "urgency" | "district" | "latestStart" | "freeFirst";
@@ -39,12 +40,13 @@ export const DEFAULT_FILTERS: EventFilters = {
   areaName: "전체",
   priceFilter: "all",
   audience: "all",
+  isPermanentOnly: false,
 };
 
 export const DEFAULT_SORT: SortOption = "urgency";
 
 function eventTextBlob(event: CultureEvent): string {
-  return [event.title, event.locationName, event.district, event.address ?? "", event.districtGroup]
+  return [event.title, event.locationName, event.district, event.address ?? "", event.districtGroup, event.category, event.description ?? ""]
     .join(" ")
     .toLowerCase();
 }
@@ -141,6 +143,11 @@ export function filterAndSortEvents(
         const active = today >= event.startDate && today <= event.endDate;
         if (!active) return false;
       }
+    }
+
+    // 1-2. 상시공간 전용 필터
+    if (filters.isPermanentOnly && !event.isPermanent) {
+      return false;
     }
 
     // 생활권 트랙이 켜져 있으면 행정구 다중 선택보다 우선 (상태 동기화 안전망)

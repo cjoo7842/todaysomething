@@ -62,6 +62,7 @@ function EventsContent() {
     const space = searchParams.get("space") || "ALL";
     const livingZoneParam = searchParams.get("livingZone") || "";
     const areaParam = searchParams.get("area") || "전체";
+    const isPermanentOnly = searchParams.get("isPermanentOnly") === "true";
     const livingZone =
       getLivingZoneById(livingZoneParam) ??
       (areaParam !== "전체" ? getLivingZoneByName(areaParam) : undefined);
@@ -82,6 +83,7 @@ function EventsContent() {
       priceFilter: free ? "free" : "all",
       locationType: (space as EventFilters["locationType"]) || "ALL",
       audience: (searchParams.get("audience") as EventFilters["audience"]) || "all",
+      isPermanentOnly,
     };
   }, [searchParams]);
 
@@ -315,10 +317,16 @@ function EventsContent() {
                 )}
               </button>
             </div>
-            <FilterChips livingZoneId={filters.livingZoneId} onLivingZoneChange={handleLivingZoneChange} />
+            <FilterChips 
+              livingZoneId={filters.livingZoneId} 
+              onLivingZoneChange={handleLivingZoneChange} 
+              isPermanentOnly={filters.isPermanentOnly}
+              onPermanentToggle={(value) => setFilters(prev => ({ ...prev, isPermanentOnly: value }))}
+            />
             {activeLivingZone && (
-              <p className="mt-1.5 text-xs text-neutral-500">
-                {activeLivingZone.name} → {activeLivingZone.districts.join(", ")}
+              <p className="text-xs text-neutral-500 mt-2 px-1">
+                {activeLivingZone.name} · {activeLivingZone.districts.join(", ")}
+                {activeLivingZone.keywords?.length ? ` · ${activeLivingZone.keywords.slice(0, 3).join(", ")}` : ""}
               </p>
             )}
             {!activeLivingZone && filters.districts.length > 0 && (

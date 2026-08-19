@@ -37,7 +37,7 @@ export function EventCard({ event, recommendationReason, customBadge }: EventCar
 
   return (
     <Link
-      href={`/event/${event.id}`}
+      href={`/event/${encodeURIComponent(event.id)}`}
       className="group block rounded-2xl border border-slate-100 bg-white shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
     >
       <div className="relative aspect-[16/9] w-full overflow-hidden rounded-t-2xl bg-[#F8F9FA]">

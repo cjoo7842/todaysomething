@@ -19,33 +19,173 @@ interface EventDetailPageProps {
 }
 
 export default function EventDetailPage({ params }: EventDetailPageProps) {
-  const allEvents = useEvents();
-  const event = allEvents.find((e) => e.id === params.id);
-
-  if (!event) {
-    notFound();
-  }
+  const allEvents = useEvents(); // Keep this for nearby events
+  const [event, setEvent] = useState<CultureEvent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   const { isFavorite, toggleFavorite } = useFavorites();
   const { addRecentlyViewed } = useRecentlyViewed();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
+  useEffect(() => {
+    async function fetchEventDetail() {
+      setIsLoading(true);
+      try {
+        // Next.js params.id는 이미 디코딩되어 있을 수 있으므로 try-catch로 안전하게 처리
+        let decodedId = params.id;
+        try {
+          decodedId = decodeURIComponent(params.id);
+        } catch (e) {
+          console.warn("Decode URI failed, using raw params.id");
+        }
+        decodedId = decodedId.trim();
+        console.log("[EventDetailPage] Decoded ID:", decodedId);
+
+        // 1. 캐시(allEvents)에서 먼저 탐색
+        const cached = allEvents.find((e) => String(e.id).trim() === decodedId);
+        if (cached) {
+          console.log("[EventDetailPage] Found in cache");
+          setEvent(cached);
+          setIsLoading(false);
+          return;
+        }
+
+        console.log("[EventDetailPage] Fetching from APIs...");
+        // 2. 서울시 API 및 TourAPI 조건부 Fetch
+        const [eventsRes, placesRes] = await Promise.all([
+          fetch('/api/events'),
+          fetch('/api/places')
+        ]);
+        
+        const eventsData = await eventsRes.json();
+        
+        // 인덱스 변동으로 인한 ID 불일치 방지 (제목으로 fallback 매칭)
+        const titlePart = decodedId.startsWith("api-") ? decodedId.split("-").slice(2).join("-").trim() : null;
+        const seoulEvent = eventsData.find((e: any) => 
+          String(e.id).trim() === decodedId || (titlePart && e.title?.trim() === titlePart)
+        );
+        
+        if (seoulEvent) {
+          console.log("[EventDetailPage] Found in Seoul API");
+          setEvent(seoulEvent);
+          setIsLoading(false);
+          return;
+        }
+
+        const placesData = await placesRes.json();
+        const tourItem = placesData.find((p: any) => `place_${p.contentid}` === decodedId);
+
+        if (tourItem) {
+          const mapCategory = (type: string) => {
+            if (type === "12") return "놀거리"; 
+            if (type === "14") return "전시"; 
+            if (type === "28") return "레포츠"; 
+            if (type === "38") return "쇼핑"; 
+            if (type === "39") return "음식점"; 
+            return "문화행사";
+          };
+          setEvent({
+            id: `place_${tourItem.contentid}`,
+            title: tourItem.title || "장소명 없음",
+            category: mapCategory(tourItem.contenttypeid),
+            district: tourItem.addr1 ? tourItem.addr1.split(" ")[1] : "서울전역",
+            districtGroup: tourItem.addr1 ? tourItem.addr1.split(" ")[1] : "서울전역",
+            isFree: true,
+            startDate: "2000-01-01",
+            endDate: "2099-12-31",
+            openHours: "상시 운영",
+            period: "상시 운영",
+            priceInfo: "문의",
+            description: tourItem.addr1 || "",
+            imageUrl: tourItem.firstimage || tourItem.firstimage2 || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80",
+            locationName: tourItem.title || "서울",
+            mapUrl: `https://map.kakao.com/link/map/${tourItem.title},${tourItem.mapy},${tourItem.mapx}`,
+            location_type: tourItem.contenttypeid === "14" || tourItem.contenttypeid === "38" ? "INDOOR" : "OUTDOOR",
+            isPermanent: true,
+          });
+          setIsLoading(false);
+          return;
+        }
+
+        // 그래도 없으면 404
+        setIsNotFound(true);
+      } catch (error) {
+        console.error("Failed to fetch event detail:", error);
+        setIsNotFound(true);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchEventDetail();
+  }, [params.id, allEvents]);
+
   // 최근 본 행사로 추가
   useEffect(() => {
-    addRecentlyViewed(event.id);
-  }, [event.id, addRecentlyViewed]);
+    if (event) {
+      addRecentlyViewed(event.id);
+    }
+  }, [event, addRecentlyViewed]);
 
-  const urgency = getUrgencyLabel(event);
+  const urgency = event ? getUrgencyLabel(event) : null;
 
   // 주변 행사 추천 (동일 district이면서 자기 자신 제외)
   const nearbyEvents = useMemo(() => {
+    if (!event) return [];
     return allEvents
       .filter((e) => e.district === event.district && e.id !== event.id)
       .slice(0, 3);
-  }, [allEvents, event.district, event.id]);
+  }, [allEvents, event]);
+
+  // 사용자 요청: 종료된 행사 판단 가드 및 예외 처리
+  const isEnded = useMemo(() => {
+    if (!event) return false;
+    
+    // 상시 공간/연중무휴는 절대 종료로 판단하지 않음 (예외 처리)
+    if (event.isPermanent || event.period === "상시 운영" || event.openHours === "상시 운영" || event.category === "상시공간") {
+      return false;
+    }
+
+    // 날짜가 없으면 기본적으로 활성화 상태로 렌더링
+    if (!event.endDate || event.endDate === "2099-12-31") return false;
+
+    // '8.19' 처럼 연도가 생략된 문자열은 2001년 등으로 잘못 파싱됨. 연도(4자리)가 없으면 판단 보류(진행중 처리)
+    if (!/\d{4}/.test(event.endDate)) return false;
+
+    const end = new Date(event.endDate);
+    if (isNaN(end.getTime())) return false; // Date 파싱 실패 시 종료 처리 안 함
+
+    // 과거 연도로 잘못 파싱된 경우 (예: 2001년) 방어 로직
+    if (end.getFullYear() < 2023) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return end < today;
+  }, [event]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] w-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  // 필수 속성(title)이라도 있으면 404로 튕기지 않고 최대한 렌더링 허용 (조건 완화)
+  if (isNotFound || (!event?.title && !event)) {
+    notFound();
+  }
 
   return (
     <main className="mx-auto max-w-2xl pb-28">
+      {/* 종료 안내 배너 (필요 시 UI 추가, 현재는 notFound로 안 튕기게만 처리) */}
+      {isEnded && (
+        <div className="bg-rose-50 p-3 text-center text-sm font-bold text-rose-600">
+          이 행사는 이미 종료되었습니다.
+        </div>
+      )}
+
       {/* 대표 이미지 및 상단 플로팅 버튼 */}
       <div className="relative aspect-[4/3] w-full bg-neutral-100">
         <Image src={event.imageUrl} alt="" fill priority className="object-cover" />
