@@ -45,7 +45,6 @@ export function useEvents(): CultureEvent[] {
           startDate: "2000-01-01",
           endDate: "2099-12-31",
           openHours: "상시 운영",
-          period: "상시 운영",
           priceInfo: "문의",
           description: p.addr1 || "",
           imageUrl: p.firstimage || p.firstimage2 || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80",

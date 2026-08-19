@@ -13,7 +13,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { CalendarModal } from "@/components/CalendarModal";
 import { EventCard } from "@/components/EventCard";
-import type { CultureEvent } from "@/types/event";
+import type { CultureEvent, EventCategory } from "@/types/event";
 
 interface EventDetailPageProps {
   params: { id: string };
@@ -96,7 +96,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
             startDate: "2000-01-01",
             endDate: "2099-12-31",
             openHours: "상시 운영",
-            period: "상시 운영",
             priceInfo: "문의",
             description: tourItem.addr1 || "",
             imageUrl: tourItem.firstimage || tourItem.firstimage2 || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80",
@@ -144,7 +143,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
     if (!event) return false;
     
     // 상시 공간/연중무휴는 절대 종료로 판단하지 않음 (예외 처리)
-    if (event.isPermanent || event.period === "상시 운영" || event.openHours === "상시 운영" || event.category === "상시공간") {
+    if (event.isPermanent || event.openHours === "상시 운영" || event.category === "상시공간" as any) {
       return false;
     }
 
