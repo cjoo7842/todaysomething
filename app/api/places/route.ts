@@ -4,55 +4,38 @@ export const revalidate = 3600;
 export const preferredRegion = 'icn1';
 
 export async function GET() {
-  const rawKey = process.env.TOUR_API_KEY || '';
-  if (!rawKey) {
-    console.error("TOUR_API_KEY is missing");
+  const apiKey = process.env.TOUR_API_KEY;
+  if (!apiKey) {
+    console.error("[TourAPI] TOUR_API_KEY is missing in environment variables");
     return NextResponse.json([]);
   }
 
-  const encodedKey = encodeURIComponent(rawKey);
-  let decodedKey = rawKey;
   try {
-    decodedKey = decodeURIComponent(rawKey);
-  } catch (e) {
-    console.warn("Raw key could not be decoded:", e);
-  }
+    // API 키 인코딩 안전 처리 (이미 인코딩된 경우와 디코딩된 경우 모두 대응)
+    const serviceKey = apiKey.includes("%") ? apiKey : encodeURIComponent(apiKey);
+    const url = `http://apis.data.go.kr/B551011/KorService2/areaBasedList2?serviceKey=${serviceKey}&numOfRows=100&pageNo=1&MobileOS=ETC&MobileApp=AppTest&_type=json&areaCode=1`;
 
-  console.log('\n=== [TourAPI Key Diagnostic Log] ===');
-  console.log('1. Raw Key:', `${rawKey.substring(0, 10)}... (Length: ${rawKey.length})`);
-  console.log('2. Has % Sign (Already Encoded?):', rawKey.includes('%'));
-  console.log('3. Has + Sign (Needs Encoding?):', rawKey.includes('+'));
-
-  const testCall = async (keyName: string, keyValue: string) => {
-    try {
-      const url = `http://apis.data.go.kr/B551011/KorService2/areaBasedList2?serviceKey=${keyValue}&numOfRows=10&pageNo=1&MobileOS=ETC&MobileApp=AppTest&_type=json&areaCode=1`;
-      const res = await fetch(url, { next: { revalidate: 0 } });
-      const text = await res.text();
-      const preview = text.substring(0, 150).replace(/\n/g, ' ');
-      console.log(`[Test ${keyName}] Status: ${res.status} | Response: ${preview}`);
-      
-      if (res.ok && !text.trim().startsWith("<") && text.includes("response")) {
-        const data = JSON.parse(text);
-        return data?.response?.body?.items?.item || [];
-      }
-      return null;
-    } catch (e: any) {
-      console.log(`[Test ${keyName}] Error:`, e.message);
-      return null;
+    const res = await fetch(url, { next: { revalidate: 3600 } });
+    if (!res.ok) {
+      throw new Error(`Tour API HTTP error with status: ${res.status}`);
     }
-  };
 
-  const rawResult = await testCall('Raw', rawKey);
-  const encResult = await testCall('Encoded', encodedKey);
-  const decResult = await testCall('Decoded', decodedKey);
+    const text = await res.text();
+    if (text.trim().startsWith("<")) {
+      console.error("[TourAPI] Received XML response instead of JSON:", text.substring(0, 150));
+      return NextResponse.json([]);
+    }
 
-  console.log('====================================\n');
+    const data = JSON.parse(text);
+    const items = data?.response?.body?.items?.item || [];
+    
+    // 허용된 문화/관광/체험 카테고리 필터링 (12:관광지, 14:문화시설, 28:레포츠, 38:쇼핑, 39:음식점)
+    const allowedTypes = ["12", "14", "28", "38", "39"];
+    const filteredItems = items.filter((item: any) => allowedTypes.includes(String(item.contenttypeid)));
 
-  // 성공한 결과가 있으면 필터링해서 리턴
-  const validItems = rawResult || encResult || decResult || [];
-  
-  const allowedTypes = ["12", "14", "28", "38", "39"];
-  const filteredItems = validItems.filter((item: any) => allowedTypes.includes(String(item.contenttypeid)));
-  
-  return NextResponse.json(filteredItems);
+    return NextResponse.json(filteredItems);
+  } catch (error) {
+    console.error("[TourAPI] Fetch or parsing error:", error);
+    return NextResponse.json([]);
+  }
 }

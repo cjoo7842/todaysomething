@@ -41,18 +41,15 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           console.warn("Decode URI failed, using raw params.id");
         }
         decodedId = decodedId.trim();
-        console.log("[EventDetailPage] Decoded ID:", decodedId);
 
         // 1. 캐시(allEvents)에서 먼저 탐색
         const cached = allEvents.find((e) => String(e.id).trim() === decodedId);
         if (cached) {
-          console.log("[EventDetailPage] Found in cache");
           setEvent(cached);
           setIsLoading(false);
           return;
         }
 
-        console.log("[EventDetailPage] Fetching from APIs...");
         // 2. 서울시 API 및 TourAPI 조건부 Fetch
         const [eventsRes, placesRes] = await Promise.all([
           fetch('/api/events'),
@@ -68,7 +65,6 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         );
         
         if (seoulEvent) {
-          console.log("[EventDetailPage] Found in Seoul API");
           setEvent(seoulEvent);
           setIsLoading(false);
           return;
